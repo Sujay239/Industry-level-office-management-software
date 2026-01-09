@@ -38,20 +38,41 @@ const Login: React.FC = () => {
       try {
         const res = await fetch(`${API_BASE_URL || ''}/auth/me`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
         if (res.ok) {
           const data = await res.json();
           if (data.user) {
-            if (data.user.role === 'admin') navigate('/admin', { replace: true });
-            else navigate('/user', { replace: true });
+            const role = data.user.role;
+
+            // Check 2FA for admins/super_admins
+            if (role === 'admin' || role === 'super_admin') {
+              try {
+                const twoFARes = await fetch(`${API_BASE_URL}/auth/2fa`, { credentials: 'include' });
+                if (twoFARes.ok) {
+                  const twoFAData = await twoFARes.json();
+                  const target = role === 'super_admin' ? '/super-admin' : '/admin';
+                  // If 2FA is enabled but session is not verified, go to verify page
+                  if (twoFAData.twoFactorEnabled && !data.user.is2FAVerified) {
+                    navigate('/verify-2fa', { replace: true, state: { from: { pathname: target } } });
+                    return;
+                  }
+                }
+              } catch (e) {
+                console.error("2FA Check failed", e);
+              }
+
+              if (role === 'super_admin') navigate('/super-admin', { replace: true });
+              else navigate('/admin', { replace: true });
+
+            } else {
+              navigate('/user', { replace: true });
+            }
           }
         }
       } catch (error) {
-        // If error (401 etc), just stay on login page
+        // Stay on login if auth fails
       }
     };
     checkAuth();
@@ -112,11 +133,10 @@ const Login: React.FC = () => {
         setLoading(false);
         return;
       }
-      if (data.role === "admin") {
-        // Check if 2FA is enabled for this admin
+      if (data.role === "admin" || data.role === "super_admin") {
+        // Check if 2FA is enabled for this admin/super_admin
         try {
           // We need to make a separate call because the login response doesn't return 2FA status
-          // But wait, the user asked to hit /auth/2fa endpoint
           const twoFARes = await fetch(`${API_BASE_URL}/auth/2fa`, {
             credentials: 'include'
           });
@@ -124,7 +144,8 @@ const Login: React.FC = () => {
           if (twoFARes.ok) {
             const twoFAData = await twoFARes.json();
             if (twoFAData.twoFactorEnabled) {
-              navigate("/verify-2fa");
+              const target = data.role === 'super_admin' ? '/super-admin' : '/admin';
+              navigate("/verify-2fa", { state: { from: { pathname: target } } });
               return;
             }
           }
@@ -132,9 +153,16 @@ const Login: React.FC = () => {
           console.error("Failed to check 2FA status", err);
           // Default to dashboard if check fails, Guard will catch it if needed
         }
-        navigate("/admin");
+
+        if (data.role === "super_admin") {
+          navigate("/super-admin");
+        } else {
+          navigate("/admin");
+        }
+
+      } else {
+        navigate("/user");
       }
-      else navigate("/user");
     } catch (error) {
       console.error(error);
       showError("Server error. Please try again.");

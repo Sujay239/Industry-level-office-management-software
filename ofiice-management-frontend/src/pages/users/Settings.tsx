@@ -28,7 +28,7 @@ import { useUser } from "../../components/UserProvider";
 
 const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
-  const { showSuccess , showError } = useNotification();
+  const { showSuccess, showError } = useNotification();
   const { user, updateUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -122,19 +122,19 @@ const Settings: React.FC = () => {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({oldPassword : passwordForm.current, newPassword : passwordForm.new}),
+      body: JSON.stringify({ oldPassword: passwordForm.current, newPassword: passwordForm.new }),
     });
     const data = await response.json();
     if (!response.ok) {
-     showError(data.message);
-     setIsLoading(false);
-     setShowPasswordModal(false);
-     setPasswordForm({
-      current: "",
-      new: "",
-      confirm: "",
-    });
-     return;
+      showError(data.message);
+      setIsLoading(false);
+      setShowPasswordModal(false);
+      setPasswordForm({
+        current: "",
+        new: "",
+        confirm: "",
+      });
+      return;
     }
 
     setIsLoading(false);

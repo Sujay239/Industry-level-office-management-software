@@ -3,13 +3,13 @@ import pool from '../../db/db';
 import hashPassword from '../../utils/hashPassword';
 import matchPassword from '../../utils/matchPassword';
 import { authenticateToken } from '../../middlewares/authenticateToken';
-import isAdmin from '../../middlewares/isAdmin';
+import isSuperAdmin from '../../middlewares/isSuperAdmin';
 import { enforce2FA } from '../../middlewares/enforce2FA';
 import decodeToken from '../../utils/decodeToken';
 const router = express.Router();
 
 
-router.post('/addAdmin', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/addAdmin', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) {
@@ -36,7 +36,7 @@ router.post('/addAdmin', authenticateToken, isAdmin, enforce2FA, async (req: Req
 });
 
 
-router.get('/getAdmins', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.get('/getAdmins', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
     try {
         const queryText = `
             SELECT id, name, email, role, avatar_url, status, created_at
@@ -62,37 +62,17 @@ router.get('/getAdmins', authenticateToken, isAdmin, enforce2FA, async (req: Req
 });
 
 
-router.delete('/removeAdmin/:id', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.delete('/removeAdmin/:id', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
     const client = await pool.connect();
     try {
         const { id } = req.params;
-        const { password } = req.body;
 
-        if (!password) {
-            return res.status(400).json({ message: 'Password is required' });
-        }
-        const token = req.cookies?.token;
-        if (!token) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-        const data: any = await decodeToken(token);
-        const currentAdminId = data.id;
-        const currentUserResult = await client.query('SELECT password_hash FROM users WHERE id = $1', [currentAdminId]);
-
-        if (currentUserResult.rows.length === 0) {
-            return res.status(404).json({ message: "Current user not found" });
-        }
-
-        const isValidPassword = await matchPassword(password, currentUserResult.rows[0].password_hash);
-        if (!isValidPassword) {
-            return res.status(403).json({ message: "Incorrect password" });
-        }
-
-        await client.query('BEGIN');
         if (!id) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'Admin ID is required' });
         }
+
+        await client.query('BEGIN');
 
         const queryText = `
             DELETE FROM users
@@ -102,10 +82,10 @@ router.delete('/removeAdmin/:id', authenticateToken, isAdmin, enforce2FA, async 
 
         const admins = await client.query('SELECT * FROM users WHERE role = $1', ['admin']);
 
-        if (admins.rows.length === 1) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({ message: 'Failed to remove last admin' });
-        }
+        // if (admins.rows.length === 1) {
+        //     await client.query('ROLLBACK');
+        //     return res.status(400).json({ message: 'Failed to remove last admin' });
+        // }
 
         const result = await client.query(queryText, [id]);
 
@@ -127,6 +107,44 @@ router.delete('/removeAdmin/:id', authenticateToken, isAdmin, enforce2FA, async 
         });
     } finally {
         client.release();
+    }
+});
+
+router.put('/updateAdmin/:id', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+
+    try {
+        // Check if email exists for other user
+        const check = await pool.query('SELECT * FROM users WHERE email = $1 AND id != $2', [email, id]);
+        if (check.rows.length > 0) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        let query = 'UPDATE users SET name = $1, email = $2';
+        const params = [name, email];
+        let paramCount = 3;
+
+        if (password && password.trim() !== '') {
+            const hashedPassword = await hashPassword(password);
+            query += `, password_hash = $${paramCount}`;
+            params.push(hashedPassword);
+            paramCount++;
+        }
+
+        query += `, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramCount} AND role = 'admin' RETURNING id, name, email, role, created_at`;
+        params.push(id); // id is always last
+
+        const result = await pool.query(query, params);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating admin:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

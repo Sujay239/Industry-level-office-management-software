@@ -8,12 +8,10 @@ import {
     TrendingUp,
     Megaphone,
     Play,
-    // Search,
     Bell,
     MoreVertical,
     Calendar,
     Clock,
-    CheckCircle2,
     XCircle,
     Loader2
 } from "lucide-react";
@@ -53,7 +51,7 @@ interface DashboardStats {
     }[];
 }
 
-const AdminDashboard: React.FC = () => {
+const SuperAdminDashboard: React.FC = () => {
     // --- Announcement State ---
     const [isAnnouncementOpen, setIsAnnouncementOpen] = React.useState(false);
     const [announcementData, setAnnouncementData] = React.useState({ subject: "", message: "", priority: "Normal" });
@@ -208,13 +206,13 @@ const AdminDashboard: React.FC = () => {
             <div className="space-y-8">
 
                 {/* --- Header with Search --- */}
-                <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 -mt-6 lg:-mt-6 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Admin Dashboard
+                            Super Admin Dashboard
                         </h1>
                         <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 mt-1">
-                            Welcome back, Admin. Here's what's happening today.
+                            Welcome back, Super Admin. Here's what's happening today.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -338,7 +336,7 @@ const AdminDashboard: React.FC = () => {
                                             <Badge variant="secondary" className="ml-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{stats?.pending_leaves.length} New</Badge>
                                         )}
                                     </CardTitle>
-                                    <Button variant="link" onClick={() => navigate('/admin/leaves')} className="text-sm text-blue-600 dark:text-blue-400 cursor-pointer">View All</Button>
+                                    <Button variant="link" onClick={() => navigate('/super-admin/leaves')} className="text-sm text-blue-600 dark:text-blue-400 cursor-pointer">View All</Button>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -404,7 +402,7 @@ const AdminDashboard: React.FC = () => {
                                 <Button
                                     variant="outline"
                                     className="w-full text-xs h-8 text-slate-500 dark:text-slate-400 border-dashed dark:border-slate-800 cursor-pointer"
-                                    onClick={() => navigate('/admin/holidays')}
+                                    onClick={() => navigate('/super-admin/holidays')}
                                 >
                                     View Full Calendar
                                 </Button>
@@ -438,7 +436,7 @@ const AdminDashboard: React.FC = () => {
                                     <Bell className="h-5 w-5 text-purple-500" />
                                     <span className="text-xs">Send Notif.</span>
                                 </Button>
-                                <Button variant="outline" className="h-20 flex-col gap-2 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 cursor-pointer" onClick={() => navigate('/admin/holidays')}>
+                                <Button variant="outline" className="h-20 flex-col gap-2 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 cursor-pointer" onClick={() => navigate('/super-admin/holidays')}>
                                     <Calendar className="h-5 w-5 text-orange-500 dark:text-white" />
                                     <span className="text-xs">Holidays</span>
                                 </Button>
@@ -640,4 +638,4 @@ const AdminDashboard: React.FC = () => {
     );
 };
 
-export default AdminDashboard;
+export default SuperAdminDashboard;

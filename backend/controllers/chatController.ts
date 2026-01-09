@@ -75,8 +75,9 @@ export const getChats = async (req: Request, res: Response) => {
             // "01:07 pm chat time showing iso time i thought" -> User wants formatted local time.
             // If backend is UTC, formatting here might be wrong timezone.
             // Better to send ISO and format in frontend.
-
-            chat.time = chat.lastMessageTime; // Send raw ISO
+            chat.time = chat.lastMessageTime
+                ? new Date(chat.lastMessageTime + ' GMT+0530').toString()
+                : null;
             // unread count is now directly from the query
             return chat;
         }));
@@ -112,6 +113,7 @@ export const getMessages = async (req: Request, res: Response) => {
         m.sender_type,
         m.attachment_url,
         m.attachment_type,
+        m.is_read,
         u.name as sender_name,
         u.avatar_url as sender_avatar
       FROM messages m
@@ -126,7 +128,7 @@ export const getMessages = async (req: Request, res: Response) => {
             id: msg.id,
             senderId: msg.sender_id ? String(msg.sender_id) : 'system',
             text: msg.text,
-            time: msg.created_at, // Send raw ISO
+            time: new Date(msg.created_at + ' GMT+0530').toString(),
             isMe: msg.sender_id == userId,
             isSystem: msg.sender_type === 'system',
             attachment: msg.attachment_url ? {
@@ -134,6 +136,7 @@ export const getMessages = async (req: Request, res: Response) => {
                 url: msg.attachment_url,
                 name: 'Attachment' // You might want to store original filename in DB
             } : undefined,
+            isRead: msg.is_read,
             senderName: msg.sender_name,
             senderAvatar: msg.sender_avatar
         }));
@@ -275,8 +278,15 @@ export const handleSocketConnection = (io: Server) => {
         }
 
         socket.on('join_chat', (chatId) => {
-            socket.join(chatId);
-            console.log(`User ${socket.id} joined chat: ${chatId}`);
+            const roomName = String(chatId);
+            socket.join(roomName);
+            console.log(`User ${socket.id} joined chat: ${roomName}`);
+        });
+
+        socket.on('leave_chat', (chatId) => {
+            const roomName = String(chatId);
+            socket.leave(roomName);
+            console.log(`User ${socket.id} left chat: ${roomName}`);
         });
 
         socket.on('send_message', async (data) => {
@@ -288,9 +298,28 @@ export const handleSocketConnection = (io: Server) => {
                 // Use authenticated user ID from socket metadata
                 const userId = socket.data.user.id;
 
+                // Check if anyone else is in the room
+                const roomName = String(chatId);
+                const room = io.sockets.adapter.rooms.get(roomName);
+
+                let isRead = false;
+                if (room) {
+                    // Iterate sockets in room to see if anyone OTHER than sender is there
+                    for (const socketId of room) {
+                        const s = io.sockets.sockets.get(socketId);
+                        const otherUserId = s?.data?.user?.id;
+                        if (otherUserId && String(otherUserId) !== String(userId)) {
+                            isRead = true;
+                            break;
+                        }
+                    }
+                }
+
+                console.log(`Message in ${roomName}: sender=${userId}, isRead=${isRead}, roomSize=${room?.size || 0}`);
+
                 const query = `
-                    INSERT INTO messages (chat_id, sender_id, content, attachment_url, attachment_type)
-                    VALUES ($1, $2, $3, $4, $5)
+                    INSERT INTO messages (chat_id, sender_id, content, attachment_url, attachment_type, is_read)
+                    VALUES ($1, $2, $3, $4, $5, $6)
                     RETURNING id, created_at
                 `;
                 const result = await db.query(query, [
@@ -298,7 +327,8 @@ export const handleSocketConnection = (io: Server) => {
                     userId, // Use secure User ID
                     text,
                     attachment?.url || null,
-                    attachment?.type || null
+                    attachment?.type || null,
+                    isRead
                 ]);
 
                 const savedMsg = result.rows[0];
@@ -307,10 +337,11 @@ export const handleSocketConnection = (io: Server) => {
                     id: savedMsg.id,
                     senderId: userId, // Send back the real user ID
                     text,
-                    time: savedMsg.created_at, // Send raw ISO
+                    time: new Date(savedMsg.created_at + ' GMT+0530').toString(),
                     isMe: false, // Receiver will see as false
                     attachment,
-                    chatId // send back chat id so client knows where to put it
+                    chatId, // send back chat id so client knows where to put it
+                    isRead // Send this so frontend knows
                 };
 
                 // Get all members of the chat to broadcast to their personal rooms

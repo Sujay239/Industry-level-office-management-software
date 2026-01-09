@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { OtpInput } from '@/components/ui/otp-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ const Verify2FA: React.FC = () => {
     const [otp, setOtp] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const { showSuccess, showError } = useNotification();
 
     const handleVerify = async () => {
@@ -40,7 +41,29 @@ const Verify2FA: React.FC = () => {
             sessionStorage.setItem('is2FAVerified', 'true');
             showSuccess("2FA Verified Successfully");
 
-            // Redirect to admin dashboard
+            // Check if there is a pending redirect
+            const from = location.state?.from?.pathname;
+            if (from) {
+                navigate(from, { replace: true });
+                return;
+            }
+
+            // Fallback: Fetch user info to determine role-based dashboard
+            try {
+                const meRes = await fetch(`${API_BASE_URL}/auth/me`, { credentials: 'include' });
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    const role = meData.user?.role;
+                    if (role === 'super_admin') {
+                        navigate('/super-admin', { replace: true });
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch user role for redirect", err);
+            }
+
+            // Default to admin dashboard if all else fails
             navigate('/admin', { replace: true });
 
         } catch (error: any) {

@@ -32,6 +32,9 @@ import ResetPassword from './pages/auth/ResetPassword';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Verify2FA from './pages/auth/Verify2FA';
 import TwoFactorGuard from './components/TwoFactorGuard';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
+import Departments from './pages/superadmin/Departments';
 
 const routes: RouteObject[] = [
   {
@@ -122,9 +125,73 @@ const routes: RouteObject[] = [
         path: "leaves",
         element: <AdminLeaves />,
       },
+      // {
+      //   path: "manage-admins",
+      //   element: <ManageAdmins />,
+      // },
+      {
+        path: "attendance",
+        element: <AdminAttendance />,
+      },
+      {
+        path: "payroll",
+        element: <AdminPayroll />,
+      },
+      {
+        path: "settings",
+        element: <AdminSettings />,
+      },
+      {
+        path: "past-employees",
+        element: <PastEmployees />,
+      },
+      {
+        path: "holidays",
+        element: <AdminHolidays />,
+      },
+      {
+        path: "tasks",
+        element: <AdminTasks />,
+      },
+      {
+        path: "meetings",
+        element: <AdminMeetings />,
+      },
+      {
+        path: "chats",
+        element: <Chats />,
+      },
+    ],
+  },
+  {
+    path: "/super-admin",
+    element: (
+      <ProtectedRoute allowedRoles={['super_admin']}>
+        <TwoFactorGuard>
+          <SuperAdminLayout />
+        </TwoFactorGuard>
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <SuperAdminDashboard />,
+      },
       {
         path: "manage-admins",
         element: <ManageAdmins />,
+      },
+      {
+        path: "departments",
+        element: <Departments />,
+      },
+      {
+        path: "employees",
+        element: <Employees />,
+      },
+      {
+        path: "leaves",
+        element: <AdminLeaves />,
       },
       {
         path: "attendance",
@@ -153,6 +220,10 @@ const routes: RouteObject[] = [
       {
         path: "meetings",
         element: <AdminMeetings />,
+      },
+      {
+        path: "chats",
+        element: <Chats />,
       },
     ],
   },

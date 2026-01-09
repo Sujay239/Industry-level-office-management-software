@@ -165,4 +165,46 @@ router.get('/myData', authenticateToken, async (req: Request, res: Response) => 
 })
 
 
+
+router.post('/verify-password', authenticateToken, async (req: Request, res: Response) => {
+    const { password } = req.body;
+    // req.user is populated by authenticateToken, but we need to fetch the full user for the password hash
+    // authenticateToken puts decoded token in req.user, usually { id, email, role }
+
+    // We need to type-cast or use the decoded info. standard authenticateToken middleware attaches to req.user
+    // Looking at other routes, they use decodeToken manually or rely on cookie.
+    // But authenticateToken is middleware. Let's see how it's used in 'myData'.
+    // 'myData' manually decodes token again? No, let's look at line 152.
+    // It manually uses decodeToken.
+    // Let's stick to the pattern used in the file for consistency, or use the middleware properly if it's set up.
+    // Line 152: router.get('/myData', authenticateToken, ...) but then it grabs token from cookie again?
+    // That's redundant but confirms the pattern.
+
+    try {
+        const token = req.cookies?.token;
+        if (!token) return res.status(401).json({ message: 'Not authenticated' });
+
+        const decoded: any = await decodeToken(token);
+        const id = decoded.id;
+
+        const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const user = result.rows[0];
+        const isMatch = await matchPassword(password, user.password_hash);
+
+        if (isMatch) {
+            return res.status(200).json({ success: true, message: 'Password verified' });
+        } else {
+            return res.status(401).json({ success: false, message: 'Invalid password' });
+        }
+    } catch (error) {
+        console.error('Password verification error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;

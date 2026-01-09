@@ -16,6 +16,7 @@ import adminHolidays from './routes/admin/adminHolidays';
 import dashboardRoutes from './routes/admin/dashboard';
 import adminTasks from './routes/admin/adminTasks';
 import meetingRoutes from './routes/admin/meetings';
+import adminDepartments from './routes/admin/adminDepartments';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import settings from './routes/employees/setting';
@@ -55,6 +56,8 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST']
   }
 });
+
+app.set('socketio', io);
 
 // Socket.IO Middleware for Authentication
 io.use((socket, next) => {
@@ -105,6 +108,9 @@ cron.schedule('0 0 26 * *', async () => {
 app.use('/auth', authRoutes);
 app.use('/auth', forgotPasswordRoutes);
 
+//Super admin routes
+app.use('/superadmin/departments', adminDepartments);
+app.use('/admin/departments', adminDepartments); // Add this for Employees.tsx
 
 //All admin routes
 app.use('/admin/emp', adminEmp);
@@ -118,6 +124,7 @@ app.use('/admin/dashboard', dashboardRoutes);
 app.use('/admin/tasks', adminTasks);
 app.use('/admin/meetings', meetingRoutes);
 app.use('/admin/notifications', notifications);
+
 
 
 // All Employee routes

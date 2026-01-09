@@ -41,6 +41,9 @@ interface User {
     name: string;
     email: string;
     avatar_url?: string;
+    role?: string;
+    department_name?: string;
+    designation?: string;
 }
 
 interface Meeting {
@@ -441,8 +444,12 @@ const AdminMeetings: React.FC = () => {
                                                     <AvatarFallback className="dark:text-white dark:border">{user.name.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium dark:text-white">{user.name}</span>
-                                                    <span className="text-xs text-slate-500 dark:text-slate-400">{user.email}</span>
+                                                    <span className="font-medium dark:text-white">
+                                                        {user.name} <span className="text-xs text-slate-400">({user.role})</span>
+                                                    </span>
+                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                        {user.email} | {user.department_name || 'N/A'} | {user.designation || 'N/A'}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </DropdownMenuCheckboxItem>
@@ -537,8 +544,12 @@ const AdminMeetings: React.FC = () => {
                                                     <AvatarFallback className="dark:text-white dark:border">{user.name.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium dark:text-white">{user.name}</span>
-                                                    <span className="text-xs text-slate-500 dark:text-slate-400">{user.email}</span>
+                                                    <span className="font-medium dark:text-white">
+                                                        {user.name} <span className="text-xs text-slate-400">({user.role})</span>
+                                                    </span>
+                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                        {user.email} | {user.department_name || 'N/A'} | {user.designation || 'N/A'}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </DropdownMenuCheckboxItem>

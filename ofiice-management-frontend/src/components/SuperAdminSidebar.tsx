@@ -13,7 +13,7 @@ import {
     Menu,
     Sun,
     Moon,
-    // Shield,
+    Shield,
     CalendarCheck,
     Calendar,
     Clock,
@@ -21,7 +21,7 @@ import {
     MessageSquare
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
-import { useUser } from "./UserProvider"; // We can reuse UserProvider for now
+import { useUser } from "./UserProvider";
 
 // --- Configuration ---
 const logo = "/logo.png";
@@ -34,20 +34,22 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-    { label: "Dashboard", to: "/admin", icon: <LayoutDashboard size={20} /> },
-    { label: "Tasks", to: "/admin/tasks", icon: <CheckSquare size={20} /> },
-    { label: "Employees", to: "/admin/employees", icon: <Users size={20} /> },
-    { label: "Attendance", to: "/admin/attendance", icon: <CalendarCheck size={20} /> },
-    { label: "Meetings", to: "/admin/meetings", icon: <CalendarCheck size={20} /> },
-    { label: "Holidays", to: "/admin/holidays", icon: <Calendar size={20} /> },
-    { label: "Chats", to: "/admin/chats", icon: <MessageSquare size={20} /> },
-    { label: "Payroll", to: "/admin/payroll", icon: <Wallet size={20} /> },
-    { label: "Leaves", to: "/admin/leaves", icon: <FileText size={20} /> },
-    { label: "Settings", to: "/admin/settings", icon: <Settings size={20} /> },
-    { label: "Past Employees", to: "/admin/past-employees", icon: <Clock size={20} /> },
+    { label: "Dashboard", to: "/super-admin", icon: <LayoutDashboard size={20} /> },
+    { label: "Tasks", to: "/super-admin/tasks", icon: <CheckSquare size={20} /> },
+    { label: "Employees", to: "/super-admin/employees", icon: <Users size={20} /> },
+    { label: "Attendance", to: "/super-admin/attendance", icon: <CalendarCheck size={20} /> },
+    { label: "Meetings", to: "/super-admin/meetings", icon: <CalendarCheck size={20} /> },
+    { label: "Holidays", to: "/super-admin/holidays", icon: <Calendar size={20} /> },
+    { label: "Chats", to: "/super-admin/chats", icon: <MessageSquare size={20} /> },
+    { label: "Payroll", to: "/super-admin/payroll", icon: <Wallet size={20} /> },
+    { label: "Leaves", to: "/super-admin/leaves", icon: <FileText size={20} /> },
+    { label: "Admins", to: "/super-admin/manage-admins", icon: <Shield size={20} /> }, // Exclusive to Super Admin
+    { label: "Departments", to: "/super-admin/departments", icon: <Users size={20} /> }, // New
+    { label: "Settings", to: "/super-admin/settings", icon: <Settings size={20} /> },
+    { label: "Past Employees", to: "/super-admin/past-employees", icon: <Clock size={20} /> },
 ];
 
-const AdminSidebar: React.FC = () => {
+const SuperAdminSidebar: React.FC = () => {
     const API_BASE_URL = import.meta.env.VITE_BASE_URL;
     const { user: contextUser } = useUser();
     const [userData, setUserData] = useState<any>(null);
@@ -125,45 +127,45 @@ const AdminSidebar: React.FC = () => {
             <aside
                 className={`
           fixed lg:static inset-y-0 left-0 z-50
-          bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+          bg-slate-900 dark:bg-black border-r border-slate-800 dark:border-slate-800
           transition-all duration-300 ease-in-out
-          flex flex-col
+          flex flex-col text-white
           ${mobileOpen ? "translate-x-0 w-64 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
           ${expanded ? "lg:w-64" : "lg:w-20"}
         `}
             >
                 {/* Logo Section */}
-                <div className="h-20 flex items-center justify-between px-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div className="h-20 flex items-center justify-between px-4 border-b border-white/10 dark:border-white/10">
                     <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${expanded ? 'w-full' : 'absolute left-0 w-full justify-center lg:justify-center'}`}>
                         <img
                             src={expanded ? logo : mobileLogo}
                             alt="Logo"
-                            className={`transition-all duration-300 ${expanded ? 'h-8' : 'h-8 lg:h-10 lg:w-10 object-contain'}`}
+                            className={`transition-all duration-300 ${expanded ? 'h-8 ' : 'h-8 lg:h-10 lg:w-10 object-contain brightness-0 invert'}`}
                         />
                     </div>
 
                     {/* Desktop Toggle Button */}
                     <button
                         onClick={toggleSidebar}
-                        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors absolute -right-3 top-9 border border-slate-200 dark:border-slate-700 shadow-sm z-50"
+                        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-900 text-slate-400 hover:text-white transition-colors absolute -right-3 top-9 border border-slate-700 dark:border-slate-800 shadow-sm z-50"
                     >
                         {expanded ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                     </button>
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 hover:[&::-webkit-scrollbar-thumb]:bg-slate-600 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-track]:bg-transparent">
                     {navItems.map((item) => (
                         <TooltipWrapper key={item.to} text={item.label} expanded={expanded}>
                             <NavLink
                                 to={item.to}
-                                end={item.to === "/admin"} // Only exact match for dashboard home
+                                end={item.to === "/super-admin"} // Only exact match for dashboard home
                                 onClick={() => setMobileOpen(false)}
                                 className={({ isActive }) => `
                     flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden
                     ${isActive
-                                        ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 dark:bg-white dark:text-slate-900"
-                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                                        ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
+                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
                                     }
                     ${!isExpandedVisual ? "justify-center" : ""}
                   `}
@@ -183,7 +185,9 @@ const AdminSidebar: React.FC = () => {
                         </TooltipWrapper>
                     ))}
                 </div>
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-4">
+
+                {/* User Profile & Actions Footer */}
+                <div className="p-4 border-t border-white/10 dark:border-white/10 bg-white/5 dark:bg-white/5 space-y-4">
 
                     <div className="flex items-center  justify-between gap-2">
 
@@ -194,8 +198,8 @@ const AdminSidebar: React.FC = () => {
                                 className={`
                 flex items-center rounded-xl transition-all duration-200 w-full group cursor-pointer
                 ${isExpandedVisual
-                                        ? "bg-white dark:bg-slate-800 border border-slate-200 dark:border-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 px-4 py-3"
-                                        : "bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 p-3 justify-center"
+                                        ? "bg-white/5 hover:bg-red-500/20 text-slate-300 hover:text-red-400 px-4 py-3 border border-white/5"
+                                        : "bg-transparent hover:bg-white/5 text-slate-400 hover:text-red-400 p-3 justify-center"
                                     }
               `}
                             >
@@ -215,28 +219,28 @@ const AdminSidebar: React.FC = () => {
 
                     {/* User Profile */}
                     <div
-                        className={`flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
-                            }`} onClick={() => navigate("/admin/settings")}
+                        className={`flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
+                            }`} onClick={() => navigate("/super-admin/settings")}
                     >
                         <div className="relative" >
                             <img
                                 src={userData?.avatar_url
                                     ? `${API_BASE_URL}/uploads/${userData.avatar_url}`
-                                    : (contextUser.avatar || "https://ui-avatars.com/api/?name=Admin")}
-                                className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 object-cover"
+                                    : (contextUser.avatar || "https://ui-avatars.com/api/?name=Super+Admin")}
+                                className="w-9 h-9 rounded-full border border-slate-600 bg-slate-800 object-cover"
                                 alt="User"
                             />
-                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-950 rounded-full"></span>
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-blue-500 border-2 border-slate-900 rounded-full"></span>
                         </div>
                         <div
                             className={`flex flex-col overflow-hidden transition-all duration-300 ${isExpandedVisual ? "w-32 ml-1" : "w-0 opacity-0 hidden"
                                 }`}
                         >
-                            <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                {userData ? userData.name : "Admin User"}
+                            <span className="text-sm font-semibold text-white truncate">
+                                {userData ? userData.name : "Super Admin"}
                             </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-500 truncate">
-                                {userData?.designation || "Administrator"}
+                            <span className="text-xs text-slate-400 truncate">
+                                {userData?.designation || "System Owner"}
                             </span>
                         </div>
                         {isExpandedVisual && (
@@ -257,7 +261,7 @@ const ThemeToggleBtn = () => {
     return (
         <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-lg bg-white/10 text-slate-400 hover:bg-white/20 transition-colors"
         >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -267,8 +271,6 @@ const ThemeToggleBtn = () => {
 // --- Helper for Tooltips ---
 const TooltipWrapper = ({ children, text, expanded }: { children: React.ReactNode; text: string; expanded: boolean }) => {
     const [show, setShow] = useState(false);
-
-    // Portal ref to render tooltip outside overflow-hidden containers
     const [coords, setCoords] = useState({ top: 0, left: 0 });
     const childRef = useRef<HTMLDivElement>(null);
 
@@ -291,10 +293,9 @@ const TooltipWrapper = ({ children, text, expanded }: { children: React.ReactNod
             className="relative w-full"
         >
             {children}
-            {/* Render tooltip in portal when sidebar is collapsed (expanded=false) */}
             {!expanded && show && createPortal(
                 <div
-                    className="fixed z-[9999] px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 pointer-events-none whitespace-nowrap"
+                    className="fixed z-[9999] px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 pointer-events-none whitespace-nowrap border border-slate-700"
                     style={{
                         top: coords.top,
                         left: coords.left,
@@ -302,8 +303,7 @@ const TooltipWrapper = ({ children, text, expanded }: { children: React.ReactNod
                     }}
                 >
                     {text}
-                    {/* Tiny arrow pointing left */}
-                    <div className="absolute top-1/2 -left-1 w-2 h-2 bg-slate-900 transform -translate-y-1/2 rotate-45" />
+                    <div className="absolute top-1/2 -left-1 w-2 h-2 bg-slate-900 border-l border-t border-slate-700 transform -translate-y-1/2 rotate-45" />
                 </div>,
                 document.body
             )}
@@ -311,5 +311,4 @@ const TooltipWrapper = ({ children, text, expanded }: { children: React.ReactNod
     );
 };
 
-export default AdminSidebar;
-
+export default SuperAdminSidebar;

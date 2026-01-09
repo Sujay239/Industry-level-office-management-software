@@ -252,7 +252,7 @@ const AdminSettings: React.FC = () => {
             if (isEnabling2FA) {
                 // Do NOT mark as verified. User wants to be asked again.
                 // Reload and go to dashboard -> Guard will catch enabled 2FA & unverified session -> Redirect to Verify2FA
-                window.location.href = '/admin';
+                window.location.href = '/';
                 return;
             } else {
                 // Clear 2FA session if disabled

@@ -56,8 +56,8 @@ CREATE TABLE users (
 );
 
 -- Add the Circular FK constraint for Departments now that Users exists
-ALTER TABLE departments 
-ADD CONSTRAINT fk_dept_manager 
+ALTER TABLE departments
+ADD CONSTRAINT fk_dept_manager
 FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL;
 
 -- =============================================
@@ -139,7 +139,7 @@ CREATE TABLE tasks (
 CREATE TABLE chats (
     id SERIAL PRIMARY KEY,
     type chat_type NOT NULL,
-    name VARCHAR(100), 
+    name VARCHAR(100),
     description TEXT,
     created_by INT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -173,7 +173,7 @@ CREATE TABLE messages (
 -- Keeps track of WHO changed WHAT
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL, 
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(50) NOT NULL, -- e.g., 'UPDATE_SALARY', 'DELETE_USER'
     entity_name VARCHAR(50) NOT NULL, -- Table name
     entity_id INT, -- Record ID
@@ -228,9 +228,9 @@ CREATE TABLE meeting_participants (
 
 CREATE TABLE past_employees (
     id SERIAL PRIMARY KEY,
-    original_user_id INT, 
+    original_user_id INT,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL, 
+    email VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     location VARCHAR(100),
     skills TEXT[],
@@ -286,16 +286,16 @@ DECLARE
     next_month_str VARCHAR;
 BEGIN
     next_month_str := TO_CHAR((CURRENT_DATE + interval '1 month'), 'Month YYYY');
-    
+
     INSERT INTO payroll (user_id, month, basic_salary, net_salary, status)
     VALUES (
-        NEW.id, 
-        TRIM(next_month_str), 
-        COALESCE(NEW.salary, 0), 
-        COALESCE(NEW.salary, 0), 
+        NEW.id,
+        TRIM(next_month_str),
+        COALESCE(NEW.salary, 0),
+        COALESCE(NEW.salary, 0),
         'pending'
     );
-    
+
     -- Also Log this action
     INSERT INTO audit_logs (action, entity_name, entity_id, details)
     VALUES ('USER_CREATED', 'users', NEW.id, jsonb_build_object('email', NEW.email, 'role', NEW.role));
@@ -317,39 +317,39 @@ DECLARE
     today DATE := CURRENT_DATE;
 BEGIN
     INSERT INTO attendance (user_id, date, status, remarks)
-    SELECT 
-        u.id, 
-        today, 
+    SELECT
+        u.id,
+        today,
         'Absent',
         'System Auto-marked: No check-in by 7 PM'
     FROM users u
-    WHERE u.status = 'Active' 
+    WHERE u.status = 'Active'
     AND u.role NOT IN ('super_admin') -- Exclude Super Admins if needed
     AND NOT EXISTS (
-        SELECT 1 FROM attendance a 
+        SELECT 1 FROM attendance a
         WHERE a.user_id = u.id AND a.date = today
     );
 END;
 $$ LANGUAGE plpgsql;
 
 INSERT INTO users (
-    name, 
-    email, 
-    password_hash, 
-    role, 
-    designation, 
-    status, 
+    name,
+    email,
+    password_hash,
+    role,
+    designation,
+    status,
     department_id,
     salary
 ) VALUES (
-    'Sujay Kotal', 
-    'kotalsujay89@gmail.com', 
-    '$2a$10$Q9uQEqmf3HN.AxqVUIQdVuG2Ay73O5VGuSs3r4BwkhxuwDtC0u.TS', 
-    'admin',
-    'System Owner', 
+    'Sujay Kotal',
+    'kotalsujay8@gmail.com',
+    '$2a$10$Q9uQEqmf3HN.AxqVUIQdVuG2Ay73O5VGuSs3r4BwkhxuwDtC0u.TS',
+    'super_admin',
+    'System Owner',
     'Active',
     NULL,
-    0.00 
+    0.00
 );
 
 -- NOTE: To run FUNCTION 2, you must set up a Cron Job.

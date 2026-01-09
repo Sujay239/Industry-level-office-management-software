@@ -7,7 +7,7 @@ type users = {
     role: String,
 }
 
-const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+const isSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies?.token;
     if (!token) {
         return res.status(401).json({ message: 'Authentication failed: Token is missing' });
@@ -16,11 +16,11 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
         if (err) {
             return res.status(403).json({ message: 'Authentication failed: Invalid or expired token' });
         }
-        if (user.role !== 'admin' && user.role !== 'super_admin') {
-            return res.status(403).json({ message: 'Authentication failed: Forbidden access Admin only.' });
+        if (user.role !== 'super_admin') {
+            return res.status(403).json({ message: 'Authentication failed: Forbidden access Super Admin only.' });
         }
         next();
     });
 };
 
-export default isAdmin;
+export default isSuperAdmin;

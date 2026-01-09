@@ -31,6 +31,23 @@ const Employees: React.FC = () => {
     const [employeesList, setEmployeesList] = useState<any[]>([]);
     const [statusFilter, setStatusFilter] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
+    const [departments, setDepartments] = useState<any[]>([]);
+
+    const fetchDepartments = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/admin/departments/getAll`, { credentials: "include" });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setDepartments(data);
+                } else {
+                    setDepartments([]);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch departments", error);
+        }
+    };
 
     const fetchEmployees = async () => {
         try {
@@ -47,6 +64,7 @@ const Employees: React.FC = () => {
                 id: emp.id,
                 name: emp.name,
                 role: emp.designation,
+                systemRole: emp.role, // Add system role from DB
                 status: emp.status || "Active",
                 email: emp.email,
                 phone: emp.phone,
@@ -56,6 +74,7 @@ const Employees: React.FC = () => {
                 employmentType: emp.employment_type,
                 joiningDate: emp.joining_date?.split("T")[0] || "",
                 salary: emp.salary,
+                department_id: emp.department_id,
             }));
 
             setEmployeesList(mappedEmployees);
@@ -67,6 +86,7 @@ const Employees: React.FC = () => {
 
     useEffect(() => {
         fetchEmployees();
+        fetchDepartments();
     }, []);
 
 
@@ -136,7 +156,9 @@ const Employees: React.FC = () => {
         skills: [] as string[],
         employmentType: "Full Time",
         joiningDate: "",
-        salary: 0
+        salary: 0,
+        departmentId: "unassigned",
+        systemRole: "employee" // Default role
     };
 
     const [newEmployee, setNewEmployee] = useState(initialFormState);
@@ -176,6 +198,8 @@ const Employees: React.FC = () => {
                 skills: string[];
                 joining_date: string;
                 employment_type: string;
+                department_id: number | null;
+                role: string;
             } = {
                 name: newEmployee.name,
                 email: newEmployee.email,
@@ -185,7 +209,9 @@ const Employees: React.FC = () => {
                 salary: newEmployee.salary,
                 skills: newEmployee.skills,
                 joining_date: newEmployee.joiningDate,
-                employment_type: newEmployee.employmentType
+                employment_type: newEmployee.employmentType,
+                department_id: (newEmployee.departmentId && newEmployee.departmentId !== "unassigned") ? parseInt(newEmployee.departmentId) : null,
+                role: newEmployee.systemRole // Payload
             };
 
             const isEdit = Boolean(editingId);
@@ -258,7 +284,9 @@ const Employees: React.FC = () => {
             skills: employee.skills || [],
             employmentType: employee.employmentType || "Full Time",
             joiningDate: employee.joiningDate || "",
-            salary: employee.salary || ""
+            salary: employee.salary || "",
+            departmentId: employee.department_id ? employee.department_id.toString() : "unassigned",
+            systemRole: employee.systemRole || "employee"
         });
         setEditingId(employee.id);
         setIsAddModalOpen(true);
@@ -281,7 +309,7 @@ const Employees: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-6 lg:p-10 animate-in fade-in duration-500">
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="space-y-8">
 
                 {/* --- Header --- */}
                 <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 -mt-6 lg:-mt-6 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -335,7 +363,7 @@ const Employees: React.FC = () => {
                 </div>
 
                 {/* --- Employee Grid --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4  gap-6">
                     {filteredEmployees.map((employee) => (
                         <Card key={employee.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:shadow-md transition-all">
 
@@ -503,6 +531,44 @@ const Employees: React.FC = () => {
                                     onChange={(e) => setNewEmployee({ ...newEmployee, location: e.target.value })}
                                     className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department</label>
+                                <Select
+                                    value={newEmployee.departmentId}
+                                    onValueChange={(value) => setNewEmployee({ ...newEmployee, departmentId: value })}
+                                >
+                                    <SelectTrigger className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                        <SelectValue placeholder="Select Department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                                        <SelectItem value="unassigned" className="text-slate-500 dark:text-slate-400 cursor-pointer">Unassigned</SelectItem>
+                                        {Array.isArray(departments) && departments.map(dep => (
+                                            <SelectItem key={dep.id} value={dep.id.toString()} className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">
+                                                {dep.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">System Role (Permissions)</label>
+                                <Select
+                                    value={newEmployee.systemRole}
+                                    onValueChange={(value) => setNewEmployee({ ...newEmployee, systemRole: value })}
+                                >
+                                    <SelectTrigger className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                        <SelectValue placeholder="Select Role" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                                        <SelectItem value="employee" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">Employee</SelectItem>
+                                        <SelectItem value="manager" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">Manager</SelectItem>
+                                        <SelectItem value="hr" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">HR</SelectItem>
+                                        {/* <SelectItem value="admin" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">Admin (Careful)</SelectItem> */}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

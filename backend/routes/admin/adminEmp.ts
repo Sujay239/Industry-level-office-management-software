@@ -29,6 +29,8 @@ router.post(
       salary,
       skills,
       employment_type,
+      department_id,
+      role // Add this
     } = req.body;
 
     if (
@@ -40,7 +42,8 @@ router.post(
       !joining_date ||
       !salary ||
       !skills ||
-      !employment_type
+      !employment_type ||
+      !role // Validate role
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -61,8 +64,24 @@ router.post(
         .toUpperCase();
       const hashedPassword = await hashPassword(generatedPassword);
 
+      // Validate Department Manager Availability
+      if (role === "manager" && department_id) {
+        const deptCheck = await pool.query(
+          "SELECT manager_id, name FROM departments WHERE id = $1",
+          [department_id]
+        );
+        if (deptCheck.rows.length > 0) {
+          const { manager_id, name } = deptCheck.rows[0];
+          if (manager_id) {
+            return res.status(400).json({
+              message: `Department '${name}' already has a manager assigned.`,
+            });
+          }
+        }
+      }
+
       const newUser = await pool.query(
-        "INSERT INTO users (name, email, password_hash, designation, phone, location, joining_date, salary, skills, employment_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        "INSERT INTO users (name, email, password_hash, designation, phone, location, joining_date, salary, skills, employment_type, department_id, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
         [
           name,
           email,
@@ -74,8 +93,24 @@ router.post(
           salary,
           skills,
           employment_type,
+          department_id ? department_id : null,
+          role,
         ]
       );
+
+      // Auto-assign Manager Logic
+      if (role === "manager" && department_id) {
+        const deptCheck = await pool.query(
+          "SELECT manager_id FROM departments WHERE id = $1",
+          [department_id]
+        );
+        if (deptCheck.rows.length > 0 && !deptCheck.rows[0].manager_id) {
+          await pool.query(
+            "UPDATE departments SET manager_id = $1 WHERE id = $2",
+            [newUser.rows[0].id, department_id]
+          );
+        }
+      }
 
       // Send response immediately to unblock UI
       res.json({ user: newUser.rows[0] });
@@ -94,9 +129,8 @@ router.post(
             );
             const adminData = adminRes.rows[0];
 
-            const dashboardLink = `${
-              process.env.CLIENT_URL || "http://localhost:5173"
-            }/login`;
+            const dashboardLink = `${process.env.CLIENT_URL || "http://localhost:5173"
+              }/login`;
 
             const emailHtml = welcomeEmployeeEmail(
               createdUser.name,
@@ -173,6 +207,8 @@ router.put(
       salary,
       skills,
       employment_type,
+      department_id,
+      role
     } = req.body;
 
     if (!name || !email || !designation || !phone || !salary) {
@@ -208,6 +244,24 @@ router.put(
         });
       }
 
+      // Validate Department Manager Availability
+      if (role === "manager" && department_id) {
+        const deptCheck = await client.query(
+          "SELECT manager_id, name FROM departments WHERE id = $1",
+          [department_id]
+        );
+        if (deptCheck.rows.length > 0) {
+          const { manager_id, name } = deptCheck.rows[0];
+          // Check if manager exists and IT IS NOT THE CURRENT USER
+          if (manager_id && String(manager_id) !== String(id)) {
+            await client.query("ROLLBACK");
+            return res.status(400).json({
+              message: `Department '${name}' already has a manager assigned.`,
+            });
+          }
+        }
+      }
+
       // 3️⃣ Update users table
       const updatedUser = await client.query(
         `UPDATE users
@@ -219,8 +273,10 @@ router.put(
            joining_date = $6,
            salary = $7,
            skills = $8,
-           employment_type = $9
-       WHERE id = $10
+           employment_type = $9,
+           department_id = $10,
+           role = $11
+       WHERE id = $12
        RETURNING *`,
         [
           name,
@@ -232,6 +288,8 @@ router.put(
           salary,
           skills,
           employment_type,
+          department_id ? department_id : null,
+          role,
           id,
         ]
       );
@@ -247,6 +305,25 @@ router.put(
       }
 
       await client.query("COMMIT");
+
+      // Auto-assign Manager Logic (Outside transaction or inside? Inside is better for consistency but department update is separate concern)
+      // Actually, let's do it separately or inside. If inside, we need to be careful.
+      // Let's do it inside before COMMIT.
+      const updatedUserData = updatedUser.rows[0];
+      if (role === "manager" && department_id) {
+        const deptCheck = await pool.query("SELECT manager_id FROM departments WHERE id = $1", [department_id]);
+        if (deptCheck.rows.length > 0 && !deptCheck.rows[0].manager_id) {
+          await pool.query("UPDATE departments SET manager_id = $1 WHERE id = $2", [updatedUserData.id, department_id]);
+        }
+      }
+      // Wait, I mixed pool and client. If I use pool here, it's outside the transaction 'client'.
+      // But I am committing right above.
+      // Let's rewrite:
+      /*
+        await client.query("COMMIT");
+        if (role === "manager" ...) { use pool }
+      */
+      // This is fine. The user update is committed. The department update follows.
 
       res.json({
         message: "Employee updated successfully",
@@ -274,9 +351,10 @@ router.get(
             SELECT
                 id, name, email, role, designation,
                 phone, location, joining_date, salary,
-                skills, employment_type, status, avatar_url
+                skills, employment_type, status, avatar_url,
+                department_id
             FROM users
-            WHERE role = 'employee'
+            WHERE role IN ('employee', 'manager', 'hr')
             ORDER BY created_at DESC
         `;
 
@@ -441,10 +519,13 @@ router.get(
       const adminData: any = await decodeToken(token);
       const queryText = `
             SELECT
-                id, name, email, role, designation,
-                phone, location, joining_date, salary,
-                skills, employment_type, status, avatar_url
-            FROM users where id != $1
+                u.id, u.name, u.email, u.role, u.designation,
+                u.phone, u.location, u.joining_date, u.salary,
+                u.skills, u.employment_type, u.status, u.avatar_url,
+                d.name as department_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE u.id != $1
         `;
 
       const result = await pool.query(queryText, [adminData.id]);

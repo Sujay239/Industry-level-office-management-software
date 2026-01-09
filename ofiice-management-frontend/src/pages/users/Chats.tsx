@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   Search,
@@ -11,13 +10,12 @@ import {
   Hash,
   Users,
   MessageSquare,
-  //   Settings,
   Smile,
   Trash2,
-  //   Info,
   X,
   AlertTriangle,
   Check,
+  CheckCheck,
   Download,
   Crown,
   UserPlus,
@@ -50,6 +48,7 @@ interface Message {
   text: string;
   time: string;
   isMe: boolean;
+  isRead?: boolean;
   isSystem?: boolean;
   attachment?: {
     type: 'image' | 'file';
@@ -77,8 +76,8 @@ interface ChatContact {
   members?: string[];
   admins?: string[];
   email?: string;
-  role?: string; // Added role
-  otherUserId?: string; // Added to identify DM target
+  role?: string;
+  otherUserId?: string;
 }
 
 // --- Constants ---
@@ -93,32 +92,22 @@ const COMMON_EMOJIS = [
   "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💯", "🎉"
 ];
 
-const formatTime = (dbDateString?: string) => {
-  if (!dbDateString) return '';
+const formatTime = (isoString?: string) => {
+  if (!isoString) return '';
+  if (isoString === 'Now') return 'Now';
 
-  try {
-    const date = new Date(dbDateString.endsWith('Z') ? dbDateString : dbDateString + ' UTC');
-    if (isNaN(date.getTime())) return dbDateString;
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
 
-    // Manually add 5 hours and 30 minutes (IST Offset)
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istDate = new Date(date.getTime() + istOffset);
-
-    // Print the components manually using UTC methods (since we already shifted the time)
-    let hours = istDate.getUTCHours();
-    const minutes = istDate.getUTCMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-
-    const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-
-    return `${hours}:${strMinutes} ${ampm}`;
-  } catch (e) {
-    return dbDateString;
-  }
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
 };
+
+
+
 
 const Chats: React.FC = () => {
   // --- State ---
@@ -137,18 +126,17 @@ const Chats: React.FC = () => {
   const [modalInputValue, setModalInputValue] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [pendingAction, setPendingAction] = useState<{ type: 'remove' | 'admin', memberId: string } | null>(null);
-  // Call status removed
 
   const { showSuccess, showError } = useNotification();
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null); // For generic files
-  const imageInputRef = useRef<HTMLInputElement>(null); // For images only
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const socket = useRef<any>(null);
 
-  // Refs for tracking state inside socket listeners (to avoid stale closures without re-binding)
+  // Refs for tracking state inside socket listeners
   const activeChatRef = useRef<ChatContact | null>(null);
   const currentUserIdRef = useRef<number | null>(null);
 
@@ -231,21 +219,8 @@ const Chats: React.FC = () => {
           const isMe = currentUserIdRef.current ? String(message.senderId) === String(currentUserIdRef.current) : false;
           const isActive = activeChatRef.current && activeChatRef.current.id === message.chatId;
 
-          // If I sent it, unread count shouldn't increase.
-          // If I am receiving it and it's active, unread count is 0.
-          // If I am receiving it and it's NOT active, unread count increases.
-
           let newUnread = c.unread || 0;
           if (isMe) {
-            // Keep it same or 0?
-            // If I send a message, I've read the chat.
-            // But theoretically I could have unread messages above it?
-            // Usually if I send a message, I am active in the chat, so unread should be 0.
-            // But let's check isActive.
-            // If I am sending, I am likely active.
-            // If for some reason I am not active (api call?), I still shouldn't increment my own unread.
-            // Safest: if isMe, keep as is (assuming I read it or it doesn't count).
-            // ACTUALLY: If I send a message, I must be viewing the chat. So unread should be 0.
             newUnread = 0;
           } else {
             if (isActive) {
@@ -306,15 +281,12 @@ const Chats: React.FC = () => {
       }
     };
 
-    // We need to attach this listener every time activeChat changes to capture closure,
-    // OR use a ref for activeChat.
-    // Socket.io listeners can stack if not cleaned up.
     socket.current.on("receive_message", handler);
 
     return () => {
       socket.current.off("receive_message", handler);
     }
-  }, [activeChat, currentUserId]); // Depend on currentUserId as well
+  }, [activeChat, currentUserId]);
 
 
   // 3. Join Chat Room & Fetch Messages when Active Chat Changes
@@ -340,6 +312,10 @@ const Chats: React.FC = () => {
       socket.current.emit("join_chat", activeChat.id);
 
       setShowEmojiPicker(false);
+
+      return () => {
+        socket.current.emit("leave_chat", activeChat.id);
+      }
     }
   }, [activeChat]);
 
@@ -353,26 +329,13 @@ const Chats: React.FC = () => {
     if (e) e.preventDefault();
     if (!messageInput.trim()) return;
 
-    // Optimistic Update is tricky without ID from backend, but we can trust socket echo or separate local append.
-    // Let's emit and wait for socket echo to append, OR append locally and ignore echo if ID matches.
-    // For now, simpler: Emit.
-    // And for immediate feedback, append locally.
-
     // Emit
     if (activeChat && socket.current) {
       socket.current.emit("send_message", {
         chatId: activeChat.id,
-        senderId: currentUserId ? currentUserId : "me", // Send real ID if available, though backend uses socket auth now
+        senderId: currentUserId ? currentUserId : "me",
         text: messageInput,
       });
-
-      // Optimistic Update: Append locally immediately
-      // We don't have the real ID yet (backend generates it), so we use a temp ID.
-      // But ensure we don't duplicate when the real echo comes back.
-      // Or just wait for echo? User says "not showing... sending".
-      // Echo is fast usually. If we depend on echo, we rely on isMe calculation above.
-      // The issue was simply that isMe was false in the echo.
-      // So fixing the echo handler should fix "not showing my side" (it was showing on left).
     }
 
     setMessageInput("");
@@ -486,7 +449,7 @@ const Chats: React.FC = () => {
     };
     setMessages(prev => [...prev, sysMsg]);
 
-    setModalType('chat-info'); // Return to info modal
+    setModalType('chat-info');
     setPendingAction(null);
   };
 
@@ -506,7 +469,6 @@ const Chats: React.FC = () => {
     setModalType('chat-info');
     setSelectedMembers([]);
 
-    // System message
     const sysMsg: Message = {
       id: Date.now(),
       senderId: 'system',
@@ -518,18 +480,14 @@ const Chats: React.FC = () => {
     setMessages(prev => [...prev, sysMsg]);
   };
 
-  // Call handlers removed
-
   // --- File Upload Handlers ---
   const triggerGenericFileUpload = () => fileInputRef.current?.click();
 
-  const triggerImageUpload = () => imageInputRef.current?.click(); // Triggers the image specific input
+  const triggerImageUpload = () => imageInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isImage: boolean = false) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      // Note: Real app should upload file and get URL.
-      // Here we emit a placeholder message.
       if (activeChat && socket.current) {
         socket.current.emit("send_message", {
           chatId: activeChat.id,
@@ -542,24 +500,16 @@ const Chats: React.FC = () => {
 
   // Merge contacts and employees
   const allDisplayContacts = React.useMemo(() => {
-    // Start with existing contacts
     const displayList = [...contacts];
 
-    // Add employees who are not in contacts
-    // We check if an employee ID exists as 'otherUserId' in any direct chat
     employees.forEach(emp => {
-      // Backend getUsers filters out 'me', so we don't need to check that.
-
-      // Check if exists in contacts.
-      // Important: Use String() for comparison to handle potential number/string mismatches.
-      // Also ensure we only check against 'direct' chats.
       const exists = contacts.some(c =>
         c.type === 'direct' && String(c.otherUserId) === String(emp.id)
       );
 
       if (!exists) {
         displayList.push({
-          id: `temp_${emp.id}`, // Virtual ID
+          id: `temp_${emp.id}`,
           name: emp.name || "Unknown",
           avatar: emp.avatar,
           type: 'direct',
@@ -572,17 +522,11 @@ const Chats: React.FC = () => {
       }
     });
 
-    // Sort: Real chats with recent messages first
     return displayList.sort((a, b) => {
-      // If one has time and other doesn't, the one with time comes first
       if (a.time && !b.time) return -1;
       if (!a.time && b.time) return 1;
-
-      // If both have time, rely on existing order (or we could try to parse time if formats are consistent)
-      // Existing order from backend is reliable for active chats.
       if (a.time && b.time) return 0;
 
-      // If neither has time (both are virtual contacts), sort alphabetically
       const nameA = a.name || "Unknown";
       const nameB = b.name || "Unknown";
       return nameA.localeCompare(nameB);
@@ -597,7 +541,6 @@ const Chats: React.FC = () => {
   // Handle clicking a contact
   const handleContactClick = async (contact: ChatContact) => {
     if (String(contact.id).startsWith('temp_') && contact.otherUserId) {
-      // It's a virtual contact. Create or Get real chat.
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/dm`, {
           method: 'POST',
@@ -607,19 +550,13 @@ const Chats: React.FC = () => {
         });
         if (res.ok) {
           const { chatId } = await res.json();
-          // Now we have a real chat ID.
-          // Update contact in list to be real.
 
-          // Is it already in contacts? logic says no (filtered).
-          // So we add it.
           const newRealContact: ChatContact = {
             ...contact,
             id: String(chatId),
             type: 'direct',
             unread: 0
           };
-
-          // Remove temp prefix if any
 
           setContacts(prev => [newRealContact, ...prev]);
           setActiveChat(newRealContact);
@@ -630,12 +567,10 @@ const Chats: React.FC = () => {
     } else {
       setActiveChat(contact);
 
-      // Mark as read locally
       setContacts(prev => prev.map(c =>
         c.id === contact.id ? { ...c, unread: 0 } : c
       ));
 
-      // Mark as read on backend
       try {
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/mark-read`, {
           method: 'POST',
@@ -668,7 +603,6 @@ const Chats: React.FC = () => {
           </AvatarFallback>
         </Avatar>
         {contact.type === 'direct' && contact.otherUserId && onlineUsers.has(String(contact.otherUserId)) && (
-          // Online indicator (real-time)
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
         )}
       </div>
@@ -681,7 +615,6 @@ const Chats: React.FC = () => {
         </div>
         <div className="flex justify-between items-center">
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
-            {/* Show current typing status or last message or designation */}
             {contact.lastMessage ? (
               contact.lastMessage
             ) : (
@@ -700,7 +633,7 @@ const Chats: React.FC = () => {
 
 
   return (
-    <div className="p-0 lg:p-1 sm:-mx-6 lg:-mx-8 h-screen flex flex-col animate-in fade-in duration-500 lg:mt-0">
+    <div className="h-screen flex flex-col animate-in fade-in duration-500 lg:mt-0">
       <Card className="flex-1 flex overflow-hidden border-slate-200 dark:border-slate-800 shadow-lg bg-white dark:bg-slate-950 h-full">
         {/* ================= LEFT SIDEBAR ================= */}
         <div
@@ -709,7 +642,6 @@ const Chats: React.FC = () => {
             ${activeChat ? "hidden md:flex" : "flex"}
         `}
         >
-          {/* Header (Sticky & Mobile Optimized) */}
           {/* Header (Sticky & App-like) */}
           <div className="sticky top-0 z-20 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 shadow-sm transition-all pb-4 pt-4">
 
@@ -858,7 +790,6 @@ const Chats: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1">
-                  {/* Call buttons removed */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -987,12 +918,26 @@ const Chats: React.FC = () => {
                             ) : (
                               <p className="leading-relaxed">{msg.text}</p>
                             )}
-                            <p
-                              className={`text-[10px] mt-1 text-right opacity-70 ${msg.isMe ? "text-slate-300" : "text-slate-400"
-                                }`}
-                            >
-                              {formatTime(msg.time)}
-                            </p>
+                            {(() => {
+                              console.log("RAW FROM API:", msg.time);
+                              console.log("BROWSER LOCAL:", new Date(msg.time).toString());
+                              return null;
+                            })()}
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                              <p
+                                className={`text-[10px] text-right opacity-70 ${msg.isMe ? "text-slate-300" : "text-slate-400"
+                                  }`}
+                              >
+                                {formatTime(msg.time)}
+                              </p>
+                              {msg.isMe && (
+                                msg.isRead ? (
+                                  <CheckCheck className="w-3 h-3 text-blue-300" />
+                                ) : (
+                                  <Check className="w-3 h-3 text-slate-300 opacity-70" />
+                                )
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1546,5 +1491,3 @@ const Chats: React.FC = () => {
 };
 
 export default Chats;
-
-
