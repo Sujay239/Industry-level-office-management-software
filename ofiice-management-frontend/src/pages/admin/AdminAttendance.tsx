@@ -24,7 +24,7 @@ interface AttendanceRecord {
 }
 
 const AdminAttendance: React.FC = () => {
-    const { showSuccess, showError } = useNotification();
+    const {  showError } = useNotification();
     const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -88,20 +88,20 @@ const AdminAttendance: React.FC = () => {
     // Calculate stats
     const presentCount = attendanceData.filter(r => r.status === 'Present').length;
     const absentCount = attendanceData.filter(r => r.status === 'Absent').length; // Note: history view might not have 'Absent' rows
-    const lateCount = attendanceData.filter(r => {
-        // Simple string check for now, backend could provide simpler flag
-        // Assuming backend sets status 'Late' or we check logic here.
-        // Backend currently sends 'Late' status if applicable in some logic, or 'Present'.
-        // Let's trust the status string from backend or the explicit checkIn time if needed.
-        // For this UI, let's rely on status 'Late' if backend sends it, OR checkIn time if we want to be strict.
-        return r.status === 'Late';
-        // Note: My backend adminAttendance code used simple status from DB.
-        // Employee attendance.ts calculated 'Late'.
-        // Let's assume the DB status is updated or we trust the DB 'status' column.
-        // If DB status is just 'Present', we might miss 'Late'.
-        // Quick fix: The backend SQL 'COALESCE(a.status, 'Absent')' uses DB status.
-        // We should depend on DB status.
-    }).length;
+    // const lateCount = attendanceData.filter(r => {
+    //     // Simple string check for now, backend could provide simpler flag
+    //     // Assuming backend sets status 'Late' or we check logic here.
+    //     // Backend currently sends 'Late' status if applicable in some logic, or 'Present'.
+    //     // Let's trust the status string from backend or the explicit checkIn time if needed.
+    //     // For this UI, let's rely on status 'Late' if backend sends it, OR checkIn time if we want to be strict.
+    //     return r.status === 'Late';
+    //     // Note: My backend adminAttendance code used simple status from DB.
+    //     // Employee attendance.ts calculated 'Late'.
+    //     // Let's assume the DB status is updated or we trust the DB 'status' column.
+    //     // If DB status is just 'Present', we might miss 'Late'.
+    //     // Quick fix: The backend SQL 'COALESCE(a.status, 'Absent')' uses DB status.
+    //     // We should depend on DB status.
+    // }).length;
 
     // For "Late", if database only stores "Present", we might need to check time.
     // But for now let's stick to status.
