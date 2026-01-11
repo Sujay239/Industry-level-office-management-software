@@ -11,6 +11,7 @@ import adminPayroll from './routes/admin/adminPayroll';
 import AdminLeaves from './routes/admin/AdminLeavesManagement';
 import adminSetting from './routes/admin/adminSetting';
 import forgotPasswordRoutes from './routes/auth/ForgotPassword';
+import adminAttendance from './routes/admin/adminAttendance';
 import announcementRoutes from './routes/admin/announcements';
 import adminHolidays from './routes/admin/adminHolidays';
 import dashboardRoutes from './routes/admin/dashboard';
@@ -126,6 +127,7 @@ app.use('/admin/dashboard', dashboardRoutes);
 app.use('/admin/tasks', adminTasks);
 app.use('/admin/meetings', meetingRoutes);
 app.use('/admin/notifications', notifications);
+app.use('/admin/attendance', adminAttendance);
 
 
 
