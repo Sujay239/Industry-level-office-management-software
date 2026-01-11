@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shield, Plus, X, Loader2, Trash } from "lucide-react";
@@ -19,7 +19,7 @@ const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const ManageAdmins: React.FC = () => {
   const { showSuccess, showError } = useNotification();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Admin Data State

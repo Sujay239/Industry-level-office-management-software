@@ -37,7 +37,7 @@ const Settings: React.FC = () => {
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
-    role: user.role,
+    designation: user.designation,
     bio: user.bio,
     phone: user.phone,
     location: user.location,
@@ -48,7 +48,7 @@ const Settings: React.FC = () => {
     setFormData({
       name: user.name,
       email: user.email,
-      role: user.role,
+      designation: user.designation,
       bio: user.bio,
       phone: user.phone,
       location: user.location,
@@ -65,18 +65,36 @@ const Settings: React.FC = () => {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Simulate unique filename (in a real backend, this would be handled there)
-      const uniqueName = `avatar_${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-      console.log(`Processing file: ${uniqueName}`); // Log simulated upload
+      // Check file size (e.g., 2MB limit)
+      if (file.size > 2 * 1024 * 1024) {
+        showError("File size too large. Max 2MB.");
+        return;
+      }
 
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
-        updateUser({ avatar: base64String });
-        showSuccess("Profile picture uploaded successfully!");
+
+        try {
+          const response = await fetch(`${BASE_URL}/settings/updateProfile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ avatar: base64String })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            updateUser({ avatar: base64String });
+            showSuccess("Profile picture uploaded successfully!");
+          } else {
+            showError(data.message || "Failed to upload avatar");
+          }
+        } catch (error) {
+          showError("Network error during upload");
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -99,18 +117,31 @@ const Settings: React.FC = () => {
     setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true);
-    // Simulate API Call
-    setTimeout(() => {
-      updateUser(formData);
+    try {
+      const response = await fetch(`${BASE_URL}/settings/updateProfile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        updateUser(formData);
+        showSuccess("Profile updated successfully!");
+      } else {
+        showError(data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      showError("Network error. Please try again.");
+    } finally {
       setIsLoading(false);
-      showSuccess("Profile updated successfully!");
-    }, 1000);
+    }
   };
 
-  async function handleUpdatePassword(event: React.FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
+  async function handleUpdatePassword(): Promise<void> {
     if (passwordForm.new !== passwordForm.confirm) {
       showError("New password and confirm password do not match!");
       return;
@@ -249,12 +280,12 @@ const Settings: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Job Title / Role</label>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Job Title / Designation</label>
                       <div className="relative">
                         <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                         <Input
-                          name="role"
-                          value={formData.role}
+                          name="designation"
+                          value={formData.designation}
                           onChange={handleInputChange}
                           className="pl-9 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-green-500 text-slate-900 dark:text-white"
                         />

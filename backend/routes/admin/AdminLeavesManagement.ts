@@ -3,6 +3,7 @@ import pool from "../../db/db";
 import { authenticateToken } from "../../middlewares/authenticateToken";
 import isAdmin from "../../middlewares/isAdmin";
 import { enforce2FA } from "../../middlewares/enforce2FA";
+import { logAudit } from "../../utils/auditLogger";
 
 const router = express.Router();
 
@@ -73,13 +74,23 @@ router.put(
 
       const leave = result.rows[0];
 
+      await logAudit(
+        // @ts-ignore
+        req.user?.id,
+        "LEAVE_APPROVED",
+        "leaves",
+        leave.id,
+        { user_id: leave.user_id, status: "Approved" },
+        req
+      );
+
       // 2. Insert/Update Attendance Records for the date range
       // We use generate_series to create the dates and ON CONFLICT to update if exists
       const attendanceQuery = `
             INSERT INTO attendance (user_id, date, status)
             SELECT $1, d::date, 'On Leave'
             FROM generate_series($2::date, $3::date, '1 day'::interval) d
-            ON CONFLICT (user_id, date) 
+            ON CONFLICT (user_id, date)
             DO UPDATE SET status = 'On Leave';
         `;
 
@@ -141,9 +152,9 @@ router.put(
 
       // 2. Delete Attendance Records if they exist for this range
       const deleteAttendanceQuery = `
-            DELETE FROM attendance 
-            WHERE user_id = $1 
-            AND date >= $2 
+            DELETE FROM attendance
+            WHERE user_id = $1
+            AND date >= $2
             AND date <= $3
         `;
 

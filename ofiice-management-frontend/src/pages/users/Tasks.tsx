@@ -229,8 +229,8 @@ const Tasks = () => {
     <div className="space-y-8 p-1 relative">
 
       <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-1 px-4 py-4 pr-16 lg:pr-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <div className="ml-8">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white ">
             Task Management
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">

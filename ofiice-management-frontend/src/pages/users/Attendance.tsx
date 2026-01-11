@@ -236,19 +236,19 @@ const Attendance = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-md:px-4 space-y-8 animate-in fade-in duration-500">
       {/* --- Header Section --- */}
       {/* --- Header Section (Sticky) --- */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+      <div className="sticky z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
+        <div className="ml-8 mt-0">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 ml-2">
             My Attendance
           </h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm">
+          <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm ">
             Check in/out and view your monthly records.
           </p>
         </div>
-        <div className="text-right hidden sm:block">
+        <div className="text-right hidden sm:block mr-8">
           <p className="text-2xl font-mono font-bold text-slate-900 dark:text-white">
             {currentTime.toLocaleTimeString([], {
               hour: "2-digit",

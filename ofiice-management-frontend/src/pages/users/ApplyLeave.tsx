@@ -207,12 +207,12 @@ const ApplyLeave: React.FC = () => {
     };
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 animate-in fade-in duration-500">
+        <div className="max-md:px-4 lg:px-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 animate-in fade-in duration-500">
 
             {/* Header (Sticky & Optimized) */}
             <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md pb-4 pt-4 mb-6 -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 lg:pt-8 transition-all duration-200 border-b border-transparent shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-1">Apply for Leave</h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">Manage your time off and view leave history.</p>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-1 ml-8">Apply for Leave</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm ml-8">Manage your time off and view leave history.</p>
             </div>
 
             {/* Leave Balances */}

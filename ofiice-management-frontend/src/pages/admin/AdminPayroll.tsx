@@ -51,7 +51,7 @@ const AdminPayroll: React.FC = () => {
     const [selectedYear, setSelectedYear] = useState<string>(currentYearVal.toString());
 
     // Generate last 5 years for the dropdown
-    const years = Array.from(new Array(5), (val, index) => (currentYearVal - index).toString());
+    const years = Array.from(new Array(5), (_val, index) => (currentYearVal - index).toString());
 
     // Standard months list
     const availableMonths = [

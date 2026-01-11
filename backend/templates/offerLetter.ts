@@ -31,7 +31,17 @@ export const offerLetterTemplate = (
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
         * { box-sizing: border-box; }
+
+        html, body {
+            width: 210mm;
+            height: 297mm;
+        }
 
         body {
             font-family: 'Montserrat', sans-serif;
@@ -40,28 +50,26 @@ export const offerLetterTemplate = (
             color: #334155;
             background: #fff;
             position: relative;
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
+            overflow: hidden; /* Force single page view clipping */
         }
 
 
         .header-bg {
             position: absolute;
             top: 0; left: 0; width: 100%;
-            height: 140px;
+            height: 140px; /* Kept large as requested */
             z-index: -1;
         }
 
         .footer-bg {
             position: absolute;
             bottom: 0; left: 0; width: 100%;
-            height: 120px;
+            height: 100px; /* Slightly reduced from 120px to save space */
             z-index: -1;
         }
 
         .container {
-            padding: 20px 50px;
+            padding: 10px 45px; /* Reduced vertical padding */
             position: relative;
             z-index: 10;
         }
@@ -69,73 +77,73 @@ export const offerLetterTemplate = (
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px; /* Reduced */
         }
 
         .logo-container {
-            text-align: right; display: flex; align-items: center; gap: 12px;
+            text-align: right; display: flex; align-items: center; gap: 10px;
         }
 
-        .logo-img { height: 45px; }
+        .logo-img { height: 40px; }
 
         .main-title {
             text-align: center;
-            font-size: 24px;
+            font-size: 22px; /* Slightly smaller */
             font-weight: 700;
             color: #0891b2;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 10px;
-            margin-bottom: 30px;
+            margin-top: 5px;
+            margin-bottom: 15px; /* Reduced */
         }
 
         .info-row {
             display: flex; justify-content: space-between; align-items: flex-start;
-            margin-bottom: 20px;
-            font-size: 13px;
+            margin-bottom: 10px; /* Reduced */
+            font-size: 11px; /* Smaller font */
         }
 
-        .recipient-info p { margin: 2px 0; }
-        .recipient-name { font-weight: 700; font-size: 15px; color: #1e293b; }
+        .recipient-info p { margin: 1px 0; }
+        .recipient-name { font-weight: 700; font-size: 13px; color: #1e293b; }
 
         .content {
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 11px; /* Smaller font to fit everything */
+            line-height: 1.4;
             color: #475569;
         }
 
-        .content p { margin: 10px 0; }
+        .content p { margin: 6px 0; } /* Tighter paragraphs */
 
-        .salutation { font-weight: 700; color: #1e293b; margin-bottom: 10px; }
+        .salutation { font-weight: 700; color: #1e293b; margin-bottom: 5px; }
 
-        .details-list { margin: 15px 0; padding-left: 20px; }
-        .details-list li { margin-bottom: 6px; list-style-type: disc; }
+        .details-list { margin: 8px 0; padding-left: 15px; }
+        .details-list li { margin-bottom: 3px; list-style-type: disc; }
         .highlight { font-weight: 600; color: #1e293b; }
 
 
         .signature-section {
-            margin-top: 30px;
+            margin-top: 15px; /* Reduced */
             text-align: right;
             display: flex; flex-direction: column; align-items: flex-end;
         }
 
-        .admin-name { font-weight: 700; color: #1e293b; margin-top: 5px; }
-        .admin-role { font-size: 12px; color: #64748b; }
+        .admin-name { font-weight: 700; color: #1e293b; margin-top: 2px; }
+        .admin-role { font-size: 10px; color: #64748b; }
 
-   
+
         .contact-footer {
             position: absolute;
-            bottom: 30px;
-            left: 50px;
-            font-size: 10px;
+            bottom: 25px; /* Adjusted position */
+            left: 45px;
+            font-size: 9px;
             color: #334155;
             z-index: 10;
         }
-        .contact-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .contact-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
         .icon-circle {
-            background-color: #0891b2; color: white; width: 16px; height: 16px;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 9px;
+            background-color: #0891b2; color: white; width: 14px; height: 14px;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 8px;
         }
     </style>
 </head>
@@ -165,7 +173,7 @@ export const offerLetterTemplate = (
 
         <div class="info-row">
             <div class="recipient-info">
-                <p style="font-size: 11px; color: #64748b; font-weight: bold;">To:</p>
+                <p style="font-size: 10px; color: #64748b; font-weight: bold;">To:</p>
                 <p class="recipient-name">${employeeName}</p>
                 <p style="max-width: 250px;">${employeeAddress}</p>
             </div>
@@ -179,7 +187,9 @@ export const offerLetterTemplate = (
 
             <p>We are delighted to offer you the position of <strong>${role}</strong> at Auto Computation. Your creativity, skills, and passion for design will be a valuable addition to our team.</p>
 
-            <p style="margin-top: 15px; margin-bottom: 5px;">Details of the Offer:</p>
+            <p>Please note that the first three months of your employment will be a probationary period for the evaluation of your performance. Upon successful completion and review of your performance during this period, your employment status will be confirmed as permanent.</p>
+
+            <p style="margin-top: 8px; margin-bottom: 4px;">Details of the Offer:</p>
             <ul class="details-list">
                 <li><span class="highlight">Position:</span> ${role}</li>
                 <li><span class="highlight">Start Date:</span> ${startDateFormat}</li>
@@ -191,7 +201,7 @@ export const offerLetterTemplate = (
 
             <div class="signature-section">
                 <p>Sincerely,</p>
-                <div style="font-family: 'Brush Script MT', cursive; font-size: 28px; color: #334155; margin: 5px 0;">${adminName}</div>
+                <div style="font-family: 'Brush Script MT', cursive; font-size: 24px; color: #334155; margin: 3px 0;">${adminName}</div>
                 <div class="admin-name">${adminName}</div>
                 <div class="admin-role">${adminRole}</div>
             </div>
@@ -205,7 +215,7 @@ export const offerLetterTemplate = (
         </div>
         <div class="contact-item">
             <div class="icon-circle">✉</div>
-            <span>autocomputation@gmail.com</span>
+            <span>autocomputation123@gmail.com</span>
         </div>
         <div class="contact-item">
             <div class="icon-circle">📍</div>

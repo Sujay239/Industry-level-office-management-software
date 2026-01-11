@@ -17,6 +17,7 @@ import dashboardRoutes from './routes/admin/dashboard';
 import adminTasks from './routes/admin/adminTasks';
 import meetingRoutes from './routes/admin/meetings';
 import adminDepartments from './routes/admin/adminDepartments';
+import auditLogsRoutes from './routes/superadmin/auditLogs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import settings from './routes/employees/setting';
@@ -86,7 +87,7 @@ io.use((socket, next) => {
 });
 
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
@@ -110,6 +111,7 @@ app.use('/auth', forgotPasswordRoutes);
 
 //Super admin routes
 app.use('/superadmin/departments', adminDepartments);
+app.use('/superadmin/audit-logs', auditLogsRoutes);
 app.use('/admin/departments', adminDepartments); // Add this for Employees.tsx
 
 //All admin routes

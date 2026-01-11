@@ -55,7 +55,7 @@ const Departments: React.FC = () => {
     // View Modal State
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewingDep, setViewingDep] = useState<Department | null>(null);
-    const [loadingView, setLoadingView] = useState(false);
+    const [_loadingView, setLoadingView] = useState(false);
 
     // Form state
     const [name, setName] = useState("");

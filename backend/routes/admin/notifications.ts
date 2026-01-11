@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import pool from '../../db/db';
 import { authenticateToken } from '../../middlewares/authenticateToken';
 import isAdmin from '../../middlewares/isAdmin';
+import { logAudit } from '../../utils/auditLogger';
 
 const router = express.Router();
 
@@ -39,6 +40,16 @@ router.post('/send', authenticateToken, isAdmin, async (req: Request, res: Respo
         });
 
         await Promise.all(promises);
+
+        await logAudit(
+            // @ts-ignore
+            req.user?.id,
+            'NOTIFICATION_SENT',
+            'notifications',
+            null,
+            { title, type, recipients_count: targets.length, send_to_all },
+            req
+        );
 
         res.status(200).json({ message: "Notifications sent successfully.", count: targets.length });
 

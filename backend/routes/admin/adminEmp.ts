@@ -10,6 +10,7 @@ import { sendEmail } from "../../utils/mailer";
 import { welcomeEmployeeEmail } from "../../templates/welcomeEmployeeEmail";
 import { offerLetterTemplate } from "../../templates/offerLetter";
 import { generatePdf } from "../../utils/pdfGenerator";
+import { logAudit } from "../../utils/auditLogger";
 
 const router = express.Router();
 
@@ -32,6 +33,8 @@ router.post(
       department_id,
       role // Add this
     } = req.body;
+
+
 
     if (
       !name ||
@@ -115,11 +118,23 @@ router.post(
       // Send response immediately to unblock UI
       res.json({ user: newUser.rows[0] });
 
+      // @ts-ignore
+      const adminId = req.user?.id;
+
+      await logAudit(
+        adminId,
+        'EMPLOYEE_CREATED',
+        'users',
+        newUser.rows[0].id,
+        { name, email, role: newUser.rows[0].role, designation },
+        req
+      );
+
       // Send Welcome Email in background
       if (newUser.rows.length > 0) {
         const createdUser = newUser.rows[0];
         // @ts-ignore
-        const adminId = req.user?.id;
+        // const adminId = req.user?.id; // This line is now redundant
 
         (async () => {
           try {
@@ -330,6 +345,18 @@ router.put(
         user: updatedUser.rows[0],
         salaryUpdatedInPayroll: Number(existingSalary) !== Number(salary),
       });
+
+      await logAudit(
+        // @ts-ignore
+        req.user?.id,
+        'EMPLOYEE_UPDATED',
+        'users',
+        updatedUser.rows[0].id,
+        { updatedFields: Object.keys(req.body) },
+        req
+      );
+
+
     } catch (error) {
       await client.query("ROLLBACK");
       console.error("Error updating employee:", error);
@@ -450,6 +477,21 @@ router.post(
         message: "Employee removed and archived successfully",
         removedUser: user.name,
       });
+
+      await logAudit(
+        adminData.id,
+        'EMPLOYEE_REMOVED',
+        'users',
+        user.id, // Keep ID for reference
+        {
+          name: user.name,
+          reason: reason || "Not specified",
+          archived_as: "past_employee"
+        },
+        req
+      );
+
+
     } catch (error) {
       // 7. Rollback (Undo everything if ANY step failed)
       await client.query("ROLLBACK");

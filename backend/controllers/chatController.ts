@@ -18,6 +18,16 @@ export const getChats = async (req: Request, res: Response) => {
                     SELECT content
                     FROM messages m
                     WHERE m.chat_id = c.id
+                    AND (
+                        c.type != 'group'
+                        OR
+                        m.created_at >= (
+                             SELECT joined_at
+                             FROM chat_members cm2
+                             WHERE cm2.chat_id = c.id
+                             AND cm2.user_id = $1
+                        )
+                    )
                     ORDER BY m.created_at DESC
                     LIMIT 1
                 ) as "lastMessage",
@@ -25,6 +35,16 @@ export const getChats = async (req: Request, res: Response) => {
                     SELECT created_at
                     FROM messages m
                     WHERE m.chat_id = c.id
+                    AND (
+                        c.type != 'group'
+                        OR
+                        m.created_at >= (
+                             SELECT joined_at
+                             FROM chat_members cm2
+                             WHERE cm2.chat_id = c.id
+                             AND cm2.user_id = $1
+                        )
+                    )
                     ORDER BY m.created_at DESC
                     LIMIT 1
                 ) as "lastMessageTime",
@@ -33,9 +53,24 @@ export const getChats = async (req: Request, res: Response) => {
                     FROM messages m
                     WHERE m.chat_id = c.id
                     AND m.sender_id != $1
-                    AND m.is_read = FALSE
+                    AND (
+                        (c.type = 'direct' AND m.is_read = FALSE)
+                        OR
+                        (c.type != 'direct' AND NOT (m.read_by @> jsonb_build_array($1::int)))
+                    )
+                    AND (
+                        c.type != 'group'
+                        OR
+                        m.created_at >= (
+                             SELECT joined_at
+                             FROM chat_members cm2
+                             WHERE cm2.chat_id = c.id
+                             AND cm2.user_id = $1
+                        )
+                    )
                 ) as unread,
-                ARRAY_AGG(cm.user_id) as members
+                ARRAY_AGG(cm.user_id::text) as members,
+                ARRAY_AGG(cm.user_id::text) FILTER (WHERE cm.is_admin) as admins
             FROM chats c
             JOIN chat_members cm ON c.id = cm.chat_id
             WHERE c.id IN (
@@ -95,34 +130,48 @@ export const getMessages = async (req: Request, res: Response) => {
 
     try {
         // Check membership first
-        const memberCheck = await db.query(
-            'SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2',
-            [chatId, userId]
-        );
+        // Check membership and get chat type + join time
+        const memberCheck = await db.query(`
+            SELECT cm.joined_at, c.type
+            FROM chat_members cm
+            JOIN chats c ON cm.chat_id = c.id
+            WHERE cm.chat_id = $1 AND cm.user_id = $2
+        `, [chatId, userId]);
 
         if (memberCheck.rows.length === 0) {
             return res.status(403).json({ message: 'Not a member of this chat' });
         }
 
-        const query = `
-      SELECT
-        m.id,
-        m.sender_id,
-        m.content as text,
-        m.created_at,
-        m.sender_type,
-        m.attachment_url,
-        m.attachment_type,
-        m.is_read,
-        u.name as sender_name,
-        u.avatar_url as sender_avatar
-      FROM messages m
-      LEFT JOIN users u ON m.sender_id = u.id
-      WHERE m.chat_id = $1
-      ORDER BY m.created_at ASC
-    `;
+        const { joined_at, type } = memberCheck.rows[0];
 
-        const result = await db.query(query, [chatId]);
+        let query = `
+          SELECT
+            m.id,
+            m.sender_id,
+            m.content as text,
+            m.created_at,
+            m.sender_type,
+            m.attachment_url,
+            m.attachment_type,
+            m.is_read,
+            u.name as sender_name,
+            u.avatar_url as sender_avatar
+          FROM messages m
+          LEFT JOIN users u ON m.sender_id = u.id
+          WHERE m.chat_id = $1
+        `;
+
+        const queryParams: any[] = [chatId];
+
+        // LOGIC: Groups = Restricted History (only after join). Spaces/Direct = Full History.
+        if (type === 'group') {
+            query += ` AND m.created_at >= $2`;
+            queryParams.push(joined_at);
+        }
+
+        query += ` ORDER BY m.created_at ASC`;
+
+        const result = await db.query(query, queryParams);
 
         const messages = result.rows.map((msg: any) => ({
             id: msg.id,
@@ -197,7 +246,7 @@ export const getUsers = async (req: Request, res: Response) => {
     try {
         const token = req.cookies?.token;
         const data: any = await decodeToken(token);
-        const result = await db.query("SELECT id, name, COALESCE(designation, role::text) as role, avatar_url as avatar FROM users WHERE status = 'Active' AND id != $1 AND name IS NOT NULL AND name != ''", [data.id]);
+        const result = await db.query("SELECT id::text, name, COALESCE(designation, role::text) as role, avatar_url as avatar FROM users WHERE status = 'Active' AND id != $1 AND name IS NOT NULL AND name != ''", [data.id]);
         res.json(result.rows);
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -239,7 +288,8 @@ export const createChat = async (req: Request, res: Response) => {
             lastMessage: `New ${type} created`,
             time: new Date().toISOString(), // Send ISO
             unread: 0,
-            members: [userId, ...(members || [])]
+            members: [String(userId), ...(members || []).map(String)],
+            admins: [String(userId)]
         });
     } catch (e) {
         await client.query('ROLLBACK');
@@ -389,13 +439,271 @@ export const markMessagesRead = async (req: Request, res: Response) => {
     if (!chatId) return res.status(400).json({ message: "Chat ID required" });
 
     try {
-        await db.query(
-            "UPDATE messages SET is_read = TRUE WHERE chat_id = $1 AND sender_id != $2 AND is_read = FALSE",
-            [chatId, userId]
-        );
+        // Determine chat type
+        const chatResult = await db.query("SELECT type FROM chats WHERE id = $1", [chatId]);
+
+        if (chatResult.rows.length === 0) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        const type = chatResult.rows[0].type;
+
+        if (type === 'direct') {
+            await db.query(
+                "UPDATE messages SET is_read = TRUE WHERE chat_id = $1 AND sender_id != $2 AND is_read = FALSE",
+                [chatId, userId]
+            );
+        } else {
+            // For groups/spaces, append user ID to read_by array if not present
+            // We use jsonb uniqueness check
+            await db.query(`
+                UPDATE messages
+                SET read_by = read_by || jsonb_build_array($2::int)
+                WHERE chat_id = $1
+                AND sender_id != $2
+                AND NOT (read_by @> jsonb_build_array($2::int))
+            `, [chatId, userId]);
+        }
+
+        // Emit event to notify that messages have been read
+        const io = req.app.get('socketio');
+        // Notify everyone in the chat (specifically the sender who is waiting for blue ticks)
+        io.to(String(chatId)).emit('messages_read', {
+            chatId,
+            readerId: userId
+        });
+
         res.json({ success: true });
     } catch (error) {
         console.error("Error marking messages read:", error);
         res.status(500).json({ message: "Server error" });
     }
 }
+
+export const makeAdmin = async (req: Request, res: Response) => {
+    const userId = (req as any).user.id;
+    const { chatId } = req.params;
+    const { memberId } = req.body;
+
+    try {
+        // Verify requester is admin
+        const adminCheck = await db.query(
+            "SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND is_admin = TRUE",
+            [chatId, userId]
+        );
+
+        if (adminCheck.rows.length === 0) {
+            return res.status(403).json({ message: "Not authorized" });
+        }
+
+        await db.query(
+            "UPDATE chat_members SET is_admin = TRUE WHERE chat_id = $1 AND user_id = $2",
+            [chatId, memberId]
+        );
+
+        // Fetch updated data to broadcast
+        const updatedDataResult = await db.query(`
+            SELECT
+                ARRAY_AGG(user_id::text) as members,
+                ARRAY_AGG(user_id::text) FILTER (WHERE is_admin) as admins
+            FROM chat_members
+            WHERE chat_id = $1
+        `, [chatId]);
+
+        const { members, admins } = updatedDataResult.rows[0];
+
+        // Emit update event
+        const io = req.app.get('socketio');
+        // We should emit to the chat room so everyone updates
+        io.to(String(chatId)).emit('chat_updated', {
+            chatId,
+            admins,
+            members,
+            type: 'admin_update'
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error making admin:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const removeMember = async (req: Request, res: Response) => {
+    const userId = (req as any).user.id;
+    const { chatId } = req.params;
+    const { memberId } = req.body;
+
+    try {
+        // Verify requester is admin
+        const adminCheck = await db.query(
+            "SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND is_admin = TRUE",
+            [chatId, userId]
+        );
+
+        if (adminCheck.rows.length === 0) {
+            return res.status(403).json({ message: "Not authorized" });
+        }
+
+        await db.query(
+            "DELETE FROM chat_members WHERE chat_id = $1 AND user_id = $2",
+            [chatId, memberId]
+        );
+
+        // Fetch updated data
+        const updatedDataResult = await db.query(`
+            SELECT
+                ARRAY_AGG(user_id::text) as members,
+                ARRAY_AGG(user_id::text) FILTER (WHERE is_admin) as admins
+            FROM chat_members
+            WHERE chat_id = $1
+        `, [chatId]);
+
+        const { members, admins } = updatedDataResult.rows[0] || { members: [], admins: [] };
+
+        // If no members left, delete the chat entirely
+        if (!members || members.length === 0) {
+            await db.query("DELETE FROM chats WHERE id = $1", [chatId]);
+            return res.json({ success: true, message: "Chat deleted due to 0 members" });
+        }
+
+        const io = req.app.get('socketio');
+        // Emit to chat room
+        io.to(String(chatId)).emit('chat_updated', {
+            chatId,
+            admins,
+            members,
+            type: 'member_removed'
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error removing member:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const addMembers = async (req: Request, res: Response) => {
+    const userId = (req as any).user.id;
+    const { chatId } = req.params;
+    const { members } = req.body; // array of IDs
+
+    if (!members || !Array.isArray(members)) {
+        return res.status(400).json({ message: "Members array required" });
+    }
+
+    try {
+        // Verify requester is admin
+        const adminCheck = await db.query(
+            "SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND is_admin = TRUE",
+            [chatId, userId]
+        );
+
+        if (adminCheck.rows.length === 0) {
+            return res.status(403).json({ message: "Not authorized" });
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            for (const memberId of members) {
+                // Check if already member to avoid duplicates/errors
+                const check = await client.query("SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2", [chatId, memberId]);
+                if (check.rows.length === 0) {
+                    await client.query("INSERT INTO chat_members (chat_id, user_id) VALUES ($1, $2)", [chatId, memberId]);
+                }
+            }
+            await client.query('COMMIT');
+
+            // Fetch updated data to broadcast
+            const updatedDataResult = await client.query(`
+                SELECT
+                    ARRAY_AGG(user_id::text) as members,
+                    ARRAY_AGG(user_id::text) FILTER (WHERE is_admin) as admins
+                FROM chat_members
+                WHERE chat_id = $1
+            `, [chatId]);
+
+            const { members: updatedMembers, admins } = updatedDataResult.rows[0];
+
+            const io = req.app.get('socketio');
+            io.to(String(chatId)).emit('chat_updated', {
+                chatId,
+                admins,
+                members: updatedMembers,
+                type: 'members_added'
+            });
+
+            // We must also notify the NEW members who might not be in the updated socket room yet!
+            // They won't receive 'chat_updated' on the 'chatId channel'.
+            // Send to their personal user_{id} channel.
+            // We need to fetch the chat DETAILS (name, type, etc) to send them so they can add it to their list.
+
+            // This is complex. For now, rely on them refreshing or implement 'chat_added' event later.
+            // Actually, let's try to notify them briefly?
+            // Sending 'chat_added' to new members personal rooms is best practice.
+            /*
+            for (const memberId of members) {
+                 io.to(`user_${memberId}`).emit('chat_added', { ...chatDetails });
+            }
+            */
+            // Skipping complex chat_added fetch for now to focus on admin bug.
+
+            res.json({ success: true });
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
+
+    } catch (error) {
+        console.error("Error adding members:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const leaveChat = async (req: Request, res: Response) => {
+    const userId = (req as any).user.id;
+    const { chatId } = req.params;
+
+    try {
+        await db.query(
+            "DELETE FROM chat_members WHERE chat_id = $1 AND user_id = $2",
+            [chatId, userId]
+        );
+
+        // Check if chat is empty
+        const checkResult = await db.query("SELECT count(*) as count FROM chat_members WHERE chat_id = $1", [chatId]);
+        const count = parseInt(checkResult.rows[0].count);
+
+        if (count === 0) {
+            await db.query("DELETE FROM chats WHERE id = $1", [chatId]);
+            return res.json({ success: true, message: "Chat deleted due to 0 members" });
+        } else {
+            // Emit update to remaining members
+            const updatedDataResult = await db.query(`
+                 SELECT
+                     ARRAY_AGG(user_id::text) as members,
+                     ARRAY_AGG(user_id::text) FILTER (WHERE is_admin) as admins
+                 FROM chat_members
+                 WHERE chat_id = $1
+             `, [chatId]);
+
+            const { members, admins } = updatedDataResult.rows[0];
+
+            const io = req.app.get('socketio');
+            io.to(String(chatId)).emit('chat_updated', {
+                chatId,
+                admins,
+                members,
+                type: 'member_left'
+            });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error leaving chat:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};

@@ -41,6 +41,7 @@ CREATE TABLE users (
     status user_status DEFAULT 'Active',
     phone VARCHAR(20),
     location VARCHAR(100),
+    bio TEXT DEFAULT NULL,
     joining_date DATE DEFAULT CURRENT_DATE,
     salary NUMERIC(15, 2) DEFAULT 0,
     skills TEXT[],
@@ -206,24 +207,36 @@ CREATE TABLE holidays (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE meetings (
+-- CREATE TABLE meetings (
+--     id SERIAL PRIMARY KEY,
+--     organizer_id INT REFERENCES users(id) ON DELETE CASCADE,
+--     title VARCHAR(255) NOT NULL,
+--     description TEXT,
+--     start_time TIMESTAMP NOT NULL,
+--     end_time TIMESTAMP NOT NULL,
+--     join_url TEXT,
+--     location TEXT,
+--     status VARCHAR(20) DEFAULT 'Scheduled', -- Scheduled, Cancelled, Completed
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE meeting_participants (
+--     meeting_id INT REFERENCES meetings(id) ON DELETE CASCADE,
+--     user_id INT REFERENCES users(id) ON DELETE CASCADE,
+--     status VARCHAR(20) DEFAULT 'Pending', -- Pending, Accepted, Declined
+--     PRIMARY KEY (meeting_id, user_id)
+-- );
+
+
+CREATE TABLE IF NOT EXISTS meetings (
     id SERIAL PRIMARY KEY,
-    organizer_id INT REFERENCES users(id) ON DELETE CASCADE,
+    user_id INT[],
     title VARCHAR(255) NOT NULL,
     description TEXT,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    meeting_link TEXT,
-    location TEXT,
-    status VARCHAR(20) DEFAULT 'Scheduled', -- Scheduled, Cancelled, Completed
+    join_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE meeting_participants (
-    meeting_id INT REFERENCES meetings(id) ON DELETE CASCADE,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'Pending', -- Pending, Accepted, Declined
-    PRIMARY KEY (meeting_id, user_id)
 );
 
 CREATE TABLE past_employees (

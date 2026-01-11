@@ -4,6 +4,7 @@ import { authenticateToken } from "../../middlewares/authenticateToken";
 import isAdmin from "../../middlewares/isAdmin";
 import { enforce2FA } from "../../middlewares/enforce2FA";
 import { sendEmail } from "../../utils/mailer";
+import { logAudit } from "../../utils/auditLogger";
 import { taskAssignmentEmail } from "../../templates/taskAssignmentEmail";
 
 const router = express.Router();
@@ -83,6 +84,19 @@ router.post(
         `;
       const finalResult = await pool.query(fetchQuery, [newTaskId]);
       const taskWithDetails = finalResult.rows[0];
+
+      await logAudit(
+        // @ts-ignore
+        created_by,
+        "TASK_ASSIGNED",
+        "tasks",
+        newTaskId,
+        {
+          title: taskWithDetails.title,
+          assigned_to: taskWithDetails.assigned_to,
+        },
+        req
+      );
 
       res.status(201).json(taskWithDetails);
 

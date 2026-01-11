@@ -35,6 +35,7 @@ import TwoFactorGuard from './components/TwoFactorGuard';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
 import Departments from './pages/superadmin/Departments';
+import AuditLogs from './pages/superadmin/AuditLogs';
 
 const routes: RouteObject[] = [
   {
@@ -184,6 +185,10 @@ const routes: RouteObject[] = [
       {
         path: "departments",
         element: <Departments />,
+      },
+      {
+        path: "audit-logs",
+        element: <AuditLogs />,
       },
       {
         path: "employees",

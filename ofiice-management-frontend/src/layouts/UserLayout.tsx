@@ -8,7 +8,7 @@ const UserLayout: React.FC = () => {
       <UserSidebar />
 
       {/* Page content - Scrollable Area */}
-      <main className="flex-1 w-full mx-auto sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto relative">
+      <main className="flex-1 w-full mx-auto overflow-x-hidden overflow-y-auto relative">
         <Outlet />
       </main>
     </div>

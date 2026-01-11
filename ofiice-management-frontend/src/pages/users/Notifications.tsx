@@ -176,11 +176,11 @@ const Notifications: React.FC = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 max-sm:px-4 animate-in fade-in duration-500">
       {/* --- Header Section --- */}
       {/* --- Header Section (Sticky) --- */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div>
+      <div className="sticky z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
+        <div className="ml-8 mt-0">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
             Notifications
             {unreadCount > 0 && (

@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 // Define the shape of the user data
 export interface UserProfile {
   name: string;
   email: string;
   role: string;
+  designation: string;
   bio: string;
   phone: string;
   location: string;
@@ -14,29 +15,66 @@ export interface UserProfile {
 interface UserContextType {
   user: UserProfile;
   updateUser: (updates: Partial<UserProfile>) => void;
+  isLoading: boolean;
 }
 
 const defaultUser: UserProfile = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  role: "Software Engineer",
-  bio: "Passionate developer loving React and modern UI design.",
-  phone: "+1 (555) 123-4567",
-  location: "New York, USA",
-  avatar: "/profile.png",
+  name: "",
+  email: "",
+  role: "",
+  designation: "",
+  bio: "",
+  phone: "",
+  location: "",
+  avatar: "",
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(defaultUser);
+  const [isLoading, setIsLoading] = useState(true);
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/auth/myData`, {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const dbUser = data.user;
+          if (dbUser) {
+            setUser({
+              name: dbUser.name || "",
+              email: dbUser.email || "",
+              role: dbUser.role || "employee",
+              bio: dbUser.bio || "No bio available.",
+              phone: dbUser.phone || "N/A",
+              location: dbUser.location || "N/A",
+              avatar: dbUser.avatar_url || "/profile.png",
+              designation: dbUser.designation || "N/A"
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [BASE_URL]);
 
   const updateUser = (updates: Partial<UserProfile>) => {
     setUser((prev) => ({ ...prev, ...updates }));
   };
 
   return (
-    <UserContext.Provider value={{ user, updateUser }}>
+    <UserContext.Provider value={{ user, updateUser, isLoading }}>
       {children}
     </UserContext.Provider>
   );

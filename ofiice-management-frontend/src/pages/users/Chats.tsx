@@ -55,6 +55,8 @@ interface Message {
     url: string;
     name: string;
   };
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 interface Employee {
@@ -118,7 +120,7 @@ const Chats: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<Employee | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
   // Modal State
@@ -138,7 +140,7 @@ const Chats: React.FC = () => {
 
   // Refs for tracking state inside socket listeners
   const activeChatRef = useRef<ChatContact | null>(null);
-  const currentUserIdRef = useRef<number | null>(null);
+  const currentUserRef = useRef<Employee | null>(null);
 
   // Keep refs synced with state
   useEffect(() => {
@@ -146,8 +148,8 @@ const Chats: React.FC = () => {
   }, [activeChat]);
 
   useEffect(() => {
-    currentUserIdRef.current = currentUserId;
-  }, [currentUserId]);
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   // --- Effects ---
 
@@ -161,7 +163,13 @@ const Chats: React.FC = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          setCurrentUserId(data.user.id);
+          // Map backend user to Employee interface
+          setCurrentUser({
+            id: String(data.user.id),
+            name: data.user.name,
+            role: data.user.role || data.user.designation || 'User',
+            avatar: data.user.avatar_url
+          });
         }
       } catch (e) {
         console.error("Failed to fetch current user", e);
@@ -213,29 +221,50 @@ const Chats: React.FC = () => {
     });
 
     socket.current.on("receive_message", (message: Message & { chatId: string }) => {
-      // Update contacts (last message) - this should always happen
-      setContacts(prev => prev.map(c => {
-        if (c.id === message.chatId) {
-          const isMe = currentUserIdRef.current ? String(message.senderId) === String(currentUserIdRef.current) : false;
-          const isActive = activeChatRef.current && activeChatRef.current.id === message.chatId;
+      // If message.chatId is valid, check if we need to update unread count
+      // For Active Chat, append message
+      if (activeChatRef.current?.id === message.chatId) {
+        setMessages((prev) => [...prev, message]);
 
-          let newUnread = c.unread || 0;
-          if (isMe) {
-            newUnread = 0;
-          } else {
-            if (isActive) {
-              newUnread = 0;
-            } else {
-              newUnread = (c.unread || 0) + 1;
+        // Mark as read immediately if window is focused? (Optional optimization)
+      }
+
+      // Update last message in sidebar
+      // Also if User B was just made admin, a system message might come? No, that's done via chat_updated now.
+      setContacts((prev) => {
+        return prev.map((c) => {
+          if (c.id === message.chatId) {
+            // If it's a new message, increment unread if not active
+            const isUnread = activeChatRef.current?.id !== message.chatId;
+            return {
+              ...c,
+              lastMessage: message.text,
+              time: message.time,
+              unread: isUnread ? (c.unread || 0) + 1 : 0
             }
           }
+          return c;
+        }).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()); // simplistic sort
+      });
+    });
 
-          return {
-            ...c,
-            lastMessage: message.text,
-            time: message.time,
-            unread: newUnread
-          };
+    socket.current.on('chat_updated', (data: { chatId: string, admins: string[], members: string[], type: string }) => {
+      // Update activeChat if it matches
+      if (activeChatRef.current && String(activeChatRef.current.id) === String(data.chatId)) {
+        setActiveChat(prev => prev ? ({ ...prev, admins: data.admins, members: data.members }) : null);
+
+        // Show toast based on type?
+        if (data.type === 'admin_update') {
+          // Verify if *I* was made admin
+          // const myId = String(currentUserRef.current?.id); // Need ref for currentUserId if used, or use valid dependency
+          // Simply updating state is enough for UI to re-render buttons
+        }
+      }
+
+      // Update contact list entry
+      setContacts(prev => prev.map(c => {
+        if (String(c.id) === String(data.chatId)) {
+          return { ...c, admins: data.admins, members: data.members };
         }
         return c;
       }));
@@ -273,20 +302,31 @@ const Chats: React.FC = () => {
           // Avoid duplicates if we optimistically updated (checking ID)
           if (prev.some(m => m.id === message.id)) return prev;
 
-          // Determine isMe based on currentUserId
-          const isMe = currentUserId ? String(message.senderId) === String(currentUserId) : false;
+          // Determine isMe based on currentUser
+          const isMe = currentUser ? String(message.senderId) === String(currentUser.id) : false;
 
           return [...prev, { ...message, isMe }];
         });
       }
     };
 
+    const readHandler = ({ chatId, readerId }: { chatId: string, readerId: string }) => {
+      // If the read event is for this chat, and the reader is NOT me (meaning someone else read my messages)
+      if (activeChat && String(chatId) === String(activeChat.id) && String(readerId) !== String(currentUser?.id)) {
+        setMessages(prev => prev.map(msg =>
+          msg.isMe && !msg.isRead ? { ...msg, isRead: true } : msg
+        ));
+      }
+    };
+
     socket.current.on("receive_message", handler);
+    socket.current.on("messages_read", readHandler);
 
     return () => {
       socket.current.off("receive_message", handler);
+      socket.current.off("messages_read", readHandler);
     }
-  }, [activeChat, currentUserId]);
+  }, [activeChat, currentUser]);
 
 
   // 3. Join Chat Room & Fetch Messages when Active Chat Changes
@@ -333,7 +373,7 @@ const Chats: React.FC = () => {
     if (activeChat && socket.current) {
       socket.current.emit("send_message", {
         chatId: activeChat.id,
-        senderId: currentUserId ? currentUserId : "me",
+        senderId: currentUser ? currentUser.id : "me",
         text: messageInput,
       });
     }
@@ -397,11 +437,34 @@ const Chats: React.FC = () => {
 
   const initiateDelete = () => setModalType('delete');
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (activeChat) {
-      setContacts(contacts.filter(c => c.id !== activeChat.id));
-      setActiveChat(null);
-      setModalType(null);
+      if (activeChat.type !== 'direct') {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/${activeChat.id}/leave`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (res.ok) {
+            setContacts(contacts.filter(c => c.id !== activeChat.id));
+            setActiveChat(null);
+            setModalType(null);
+            showSuccess("Left chat successfully");
+          } else {
+            showError("Failed to leave chat");
+          }
+        } catch (error) {
+          console.error("Error leaving chat", error);
+          showError("Error leaving chat");
+        }
+      } else {
+        // Direct chat - just local delete for now (or implement delete API if backend supports)
+        setContacts(contacts.filter(c => c.id !== activeChat.id));
+        setActiveChat(null);
+        setModalType(null);
+      }
     }
   };
 
@@ -416,44 +479,69 @@ const Chats: React.FC = () => {
     setModalType('confirm-action');
   };
 
-  const executeConfirmation = () => {
+  const executeConfirmation = async () => {
     if (!activeChat || !pendingAction) return;
     const { type, memberId } = pendingAction;
 
     let updatedChat = { ...activeChat };
     let sysMsgText = '';
 
-    if (type === 'remove') {
-      if (!activeChat.members) return;
-      updatedChat.members = activeChat.members.filter(id => id !== memberId);
-      sysMsgText = 'Member removed';
-      showSuccess("Member removed successfully!");
-    } else if (type === 'admin') {
-      const currentAdmins = activeChat.admins || [];
-      if (currentAdmins.includes(memberId)) return;
-      updatedChat.admins = [...currentAdmins, memberId];
-      sysMsgText = 'Member promoted to Admin';
-      showSuccess("Member promoted to admin successfully!");
+    try {
+      if (type === 'remove') {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/${activeChat.id}/remove-member`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberId }),
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error("Failed to remove member");
+
+        if (!activeChat.members) return;
+        updatedChat.members = activeChat.members.filter(id => id !== memberId);
+        sysMsgText = 'Member removed';
+        showSuccess("Member removed successfully!");
+
+      } else if (type === 'admin') {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/${activeChat.id}/make-admin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberId }),
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error("Failed to make admin");
+
+        const currentAdmins = activeChat.admins || [];
+        if (currentAdmins.includes(memberId)) return;
+        updatedChat.admins = [...currentAdmins, memberId];
+        sysMsgText = 'Member promoted to Admin';
+        showSuccess("Member promoted to admin successfully!");
+      }
+
+      setActiveChat(updatedChat);
+      setContacts(contacts.map(c => c.id === activeChat.id ? updatedChat : c));
+
+      const sysMsg: Message = {
+        id: Date.now(),
+        senderId: 'system',
+        text: sysMsgText,
+        time: 'Now',
+        isMe: false,
+        isSystem: true
+      };
+      setMessages(prev => [...prev, sysMsg]);
+
+      setModalType('chat-info');
+      setPendingAction(null);
+
+    } catch (error) {
+      console.error("Action failed", error);
+      showError("Action failed. Please try again.");
     }
-
-    setActiveChat(updatedChat);
-    setContacts(contacts.map(c => c.id === activeChat.id ? updatedChat : c));
-
-    const sysMsg: Message = {
-      id: Date.now(),
-      senderId: 'system',
-      text: sysMsgText,
-      time: 'Now',
-      isMe: false,
-      isSystem: true
-    };
-    setMessages(prev => [...prev, sysMsg]);
-
-    setModalType('chat-info');
-    setPendingAction(null);
   };
 
-  const handleAddMembers = (e: React.FormEvent) => {
+  const handleAddMembers = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeChat || !activeChat.members) return;
 
@@ -463,21 +551,37 @@ const Chats: React.FC = () => {
       return;
     }
 
-    const updatedChat = { ...activeChat, members: [...activeChat.members, ...newMembers] };
-    setActiveChat(updatedChat);
-    setContacts(contacts.map(c => c.id === activeChat.id ? updatedChat : c));
-    setModalType('chat-info');
-    setSelectedMembers([]);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chats/${activeChat.id}/add-members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ members: newMembers }),
+        credentials: 'include'
+      });
 
-    const sysMsg: Message = {
-      id: Date.now(),
-      senderId: 'system',
-      text: `${newMembers.length} new member(s) added`,
-      time: new Date().toISOString(),
-      isMe: false,
-      isSystem: true
-    };
-    setMessages(prev => [...prev, sysMsg]);
+      if (!res.ok) throw new Error("Failed to add members");
+
+      const updatedChat = { ...activeChat, members: [...activeChat.members, ...newMembers] };
+      setActiveChat(updatedChat);
+      setContacts(contacts.map(c => c.id === activeChat.id ? updatedChat : c));
+      setModalType('chat-info');
+      setSelectedMembers([]);
+
+      const sysMsg: Message = {
+        id: Date.now(),
+        senderId: 'system',
+        text: `${newMembers.length} new member(s) added`,
+        time: new Date().toISOString(),
+        isMe: false,
+        isSystem: true
+      };
+      setMessages(prev => [...prev, sysMsg]);
+      showSuccess("Members added successfully!");
+
+    } catch (error) {
+      console.error("Failed to add members", error);
+      showError("Failed to add members");
+    }
   };
 
   // --- File Upload Handlers ---
@@ -821,10 +925,10 @@ const Chats: React.FC = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="dark:bg-slate-800" />
                       <DropdownMenuItem
-                        onClick={initiateDelete}
+                        onSelect={(e) => { e.preventDefault(); initiateDelete(); }}
                         className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Chat
+                        <Trash2 className="mr-2 h-4 w-4" /> {activeChat.type !== 'direct' ? 'Remove Chat' : 'Delete Chat'}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -860,83 +964,94 @@ const Chats: React.FC = () => {
                             } items-end gap-2`}
                         >
                           {!msg.isMe && (
-                            <Avatar className="h-8 w-8 mb-1 hidden sm:block">
+                            <Avatar className="h-8 w-8 mb-1 mr-1 hidden sm:block">
+                              <AvatarImage src={activeChat.type === 'direct' ? activeChat.avatar : msg.senderAvatar} />
                               <AvatarFallback className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                                {activeChat.name.substring(0, 1)}
+                                {activeChat.type === 'direct'
+                                  ? activeChat.name.substring(0, 1)
+                                  : (msg.senderName ? msg.senderName.substring(0, 1) : '?')}
                               </AvatarFallback>
                             </Avatar>
                           )}
 
-                          <div
-                            className={`p-3 rounded-2xl text-sm shadow-sm ${msg.isMe
-                              ? "bg-slate-900 text-white dark:bg-green-600 rounded-br-none"
-                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-700"
-                              }`}
-                          >
-                            {msg.attachment ? (
-                              msg.attachment.type === "image" ? (
-                                <div className="group/image relative mb-1">
-                                  <img
-                                    src={msg.attachment.url}
-                                    alt="Shared"
-                                    className="max-w-[200px] sm:max-w-xs rounded-lg border border-white/10"
-                                  />
-                                  <a
-                                    href={msg.attachment.url}
-                                    download={msg.attachment.name}
-                                    className="absolute bottom-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover/image:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm"
-                                    title="Download Image"
-                                  >
-                                    <Download size={14} />
-                                  </a>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-3 bg-black/5 dark:bg-black/20 p-2 rounded-lg mb-1">
-                                  <div className="p-2 bg-white dark:bg-slate-700 rounded-lg">
-                                    <Paperclip
-                                      size={20}
-                                      className="text-slate-500 dark:text-slate-300"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate max-w-[150px]">
-                                      {msg.attachment.name}
-                                    </p>
-                                    <span className="text-xs opacity-70">
-                                      File
-                                    </span>
-                                  </div>
-                                  <a
-                                    href={msg.attachment.url}
-                                    download={msg.attachment.name}
-                                    className="p-2 hover:bg-black/10 rounded-full cursor-pointer"
-                                  >
-                                    <Download size={16} />
-                                  </a>
-                                </div>
-                              )
-                            ) : (
-                              <p className="leading-relaxed">{msg.text}</p>
+                          {/* Message Bubble Wrapper - Modified to show Name */}
+                          <div className={`flex flex-col ${msg.isMe ? "items-end" : "items-start"} max-w-full min-w-0`}>
+                            {activeChat.type !== 'direct' && !msg.isMe && (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-2 mb-0.5 font-medium leading-none">
+                                {msg.senderName?.split(' ')[0] || 'Unknown'}
+                              </span>
                             )}
-                            {(() => {
-                              console.log("RAW FROM API:", msg.time);
-                              console.log("BROWSER LOCAL:", new Date(msg.time).toString());
-                              return null;
-                            })()}
-                            <div className="flex items-center justify-end gap-1 mt-1">
-                              <p
-                                className={`text-[10px] text-right opacity-70 ${msg.isMe ? "text-slate-300" : "text-slate-400"
-                                  }`}
-                              >
-                                {formatTime(msg.time)}
-                              </p>
-                              {msg.isMe && (
-                                msg.isRead ? (
-                                  <CheckCheck className="w-3 h-3 text-blue-300" />
+                            <div
+                              className={`p-1.5 px-2 rounded-2xl text-[11px] shadow-sm ${msg.isMe
+                                ? "bg-slate-900 text-white dark:bg-green-600 rounded-br-none"
+                                : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-700"
+                                }`}
+                            >
+                              {msg.attachment ? (
+                                msg.attachment.type === "image" ? (
+                                  <div className="group/image relative mb-1">
+                                    <img
+                                      src={msg.attachment.url}
+                                      alt="Shared"
+                                      className="max-w-[150px] sm:max-w-[200px] rounded-lg border border-white/10"
+                                    />
+                                    <a
+                                      href={msg.attachment.url}
+                                      download={msg.attachment.name}
+                                      className="absolute bottom-1 right-1 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover/image:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm"
+                                      title="Download Image"
+                                    >
+                                      <Download size={12} />
+                                    </a>
+                                  </div>
                                 ) : (
-                                  <Check className="w-3 h-3 text-slate-300 opacity-70" />
+                                  <div className="flex items-center gap-1.5 bg-black/5 dark:bg-black/20 p-1.5 rounded-lg mb-1">
+                                    <div className="p-1 bg-white dark:bg-slate-700 rounded-lg">
+                                      <Paperclip
+                                        size={14}
+                                        className="text-slate-500 dark:text-slate-300"
+                                      />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium truncate max-w-[100px] text-[10px]">
+                                        {msg.attachment.name}
+                                      </p>
+                                      <span className="text-[9px] opacity-70">
+                                        File
+                                      </span>
+                                    </div>
+                                    <a
+                                      href={msg.attachment.url}
+                                      download={msg.attachment.name}
+                                      className="p-1 hover:bg-black/10 rounded-full cursor-pointer"
+                                    >
+                                      <Download size={12} />
+                                    </a>
+                                  </div>
                                 )
+                              ) : (
+                                <p className="leading-snug">{msg.text}</p>
                               )}
+                              {(() => {
+                                // console.log("RAW FROM API:", msg.time);
+                                // console.log("BROWSER LOCAL:", new Date(msg.time).toString());
+                                return null;
+                              })()}
+                              <div className="flex items-center justify-end gap-1 mt-0.5">
+                                <p
+                                  className={`text-[7px] text-right opacity-70 leading-none ${msg.isMe ? "text-slate-300" : "text-slate-400"
+                                    }`}
+                                >
+                                  {formatTime(msg.time)}
+                                </p>
+                                {msg.isMe && (
+                                  msg.isRead ? (
+                                    <CheckCheck className="w-3 h-3 text-blue-300 " stroke="black" />
+                                  ) : (
+                                    <Check className="w-3 h-3 text-slate-300 opacity-70" stroke="black" />
+                                  )
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1222,10 +1337,10 @@ const Chats: React.FC = () => {
               />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Delete Chat?
+              {activeChat?.type !== 'direct' ? 'Remove Chat?' : 'Delete Chat?'}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-              This action cannot be undone.
+              {activeChat?.type !== 'direct' ? 'Are you sure you want to remove this chat? You will be removed from the group.' : 'This action cannot be undone.'}
             </p>
             <div className="flex gap-2">
               <Button
@@ -1239,7 +1354,7 @@ const Chats: React.FC = () => {
                 onClick={confirmDelete}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white"
               >
-                Delete
+                {activeChat?.type !== 'direct' ? 'Remove' : 'Delete'}
               </Button>
             </div>
           </Card>
@@ -1330,7 +1445,7 @@ const Chats: React.FC = () => {
                     {activeChat.members?.length || 0} Members
                   </h4>
                   {/* Add Member Button - Only if Admin */}
-                  {activeChat.admins?.includes('me') && (
+                  {currentUser && activeChat.admins?.includes(String(currentUser.id)) && (
                     <button
                       onClick={() => { setSelectedMembers([]); setModalType('add-member'); }}
                       className="text-xs flex items-center gap-1 text-slate-900 dark:text-green-400 font-medium hover:underline cursor-pointer"
@@ -1341,9 +1456,17 @@ const Chats: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   {activeChat.members?.map(memberId => {
-                    const member = employees.find(e => e.id === memberId) || { id: memberId, name: 'Unknown', role: 'Member' };
+                    // Handle "me" which is not in employees list
+                    let member = employees.find(e => e.id === memberId);
+                    if (String(memberId) === String(currentUser?.id) && currentUser) {
+                      member = currentUser;
+                    }
+                    if (!member) {
+                      member = { id: memberId, name: 'Unknown', role: 'Member' };
+                    }
+
                     const isAdmin = activeChat.admins?.includes(memberId);
-                    const isMeAdmin = activeChat.admins?.includes('me');
+                    const isMeAdmin = currentUser && activeChat.admins?.includes(String(currentUser.id));
 
                     return (
                       <div key={memberId} className="flex items-center justify-between group">
@@ -1425,9 +1548,12 @@ const Chats: React.FC = () => {
                 <MoreVertical size={20} className="text-slate-400" />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">Chat Settings</span>
               </button>
-              <button className="w-full flex items-center gap-4 p-4 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors text-left cursor-pointer group">
+              <button
+                onClick={initiateDelete}
+                className="w-full flex items-center gap-4 p-4 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors text-left cursor-pointer group"
+              >
                 <Trash2 size={20} className="text-red-500 group-hover:text-red-600" />
-                <span className="text-red-500 group-hover:text-red-600 font-medium">Delete Chat</span>
+                <span className="text-red-500 group-hover:text-red-600 font-medium">{activeChat.type !== 'direct' ? 'Remove Chat' : 'Delete Chat'}</span>
               </button>
             </div>
 

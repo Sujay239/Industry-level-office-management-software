@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
     { label: "Departments", to: "/super-admin/departments", icon: <Users size={20} /> }, // New
     { label: "Settings", to: "/super-admin/settings", icon: <Settings size={20} /> },
     { label: "Past Employees", to: "/super-admin/past-employees", icon: <Clock size={20} /> },
+    { label: "Audit Logs", to: "/super-admin/audit-logs", icon: <Calendar size={20} /> },
 ];
 
 const SuperAdminSidebar: React.FC = () => {
@@ -127,7 +128,7 @@ const SuperAdminSidebar: React.FC = () => {
             <aside
                 className={`
           fixed lg:static inset-y-0 left-0 z-50
-          bg-slate-900 dark:bg-black border-r border-slate-800 dark:border-slate-800
+          bg-slate-900 dark:bg-black  border-r border-slate-800 dark:border-slate-800
           transition-all duration-300 ease-in-out
           flex flex-col text-white
           ${mobileOpen ? "translate-x-0 w-64 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
