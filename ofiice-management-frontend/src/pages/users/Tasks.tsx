@@ -73,7 +73,7 @@ const Tasks = () => {
       const mappedTasks = data.tasks.map((t: any) => ({
         id: t.id,
         title: t.title,
-        project: t.project || "General",
+        project: t.project_name || "General",
         status: t.status,
         priority: t.priority,
         dueDate: t.due_date,

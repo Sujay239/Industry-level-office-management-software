@@ -207,7 +207,7 @@ const ApplyLeave: React.FC = () => {
     };
 
     return (
-        <div className="max-md:px-4 lg:px-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 animate-in fade-in duration-500">
+        <div className="px-4 lg:px-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 animate-in fade-in duration-500 ">
 
             {/* Header (Sticky & Optimized) */}
             <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md pb-4 pt-4 mb-6 -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 lg:pt-8 transition-all duration-200 border-b border-transparent shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50">

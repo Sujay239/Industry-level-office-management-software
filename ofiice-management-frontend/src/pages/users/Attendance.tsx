@@ -236,7 +236,7 @@ const Attendance = () => {
   };
 
   return (
-    <div className="max-md:px-4 space-y-8 animate-in fade-in duration-500">
+    <div className="max-md:px-4 space-y-8 animate-in fade-in duration-500 mx-4">
       {/* --- Header Section --- */}
       {/* --- Header Section (Sticky) --- */}
       <div className="sticky z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">

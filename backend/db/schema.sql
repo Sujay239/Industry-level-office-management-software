@@ -15,9 +15,9 @@ CREATE TYPE message_sender_type AS ENUM ('user', 'system', 'bot');
 CREATE TYPE attachment_type AS ENUM ('image', 'file', 'video', 'audio');
 CREATE TYPE notification_type AS ENUM ('success', 'error', 'info', 'warning', 'reminder');
 
--- =============================================
+-- ====================================================
 -- 2. DEPARTMENTS (New - for Organizational Scaling)
--- =============================================
+-- ====================================================
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
