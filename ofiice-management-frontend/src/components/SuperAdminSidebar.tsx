@@ -221,7 +221,11 @@ const SuperAdminSidebar: React.FC = () => {
                     {/* User Profile */}
                     <div
                         className={`flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
-                            }`} onClick={() => navigate("/super-admin/settings")}
+                            }`} onClick={() => {
+                                navigate("/super-admin/settings");
+                                setMobileOpen(false);
+                            }
+                            }
                     >
                         <div className="relative" >
                             <img

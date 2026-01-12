@@ -320,7 +320,11 @@ const UserSidebar: React.FC = () => {
 
           {/* User Profile */}
           <div
-            onClick={() => navigate('/user/settings')}
+            onClick={() => {
+              navigate('/user/settings');
+              setMobileOpen(false);
+              window.location.reload();
+            }}
             className={`flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
               }`}
           >

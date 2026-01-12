@@ -216,7 +216,12 @@ const AdminSidebar: React.FC = () => {
                     {/* User Profile */}
                     <div
                         className={`flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
-                            }`} onClick={() => navigate("/admin/settings")}
+                            }`} onClick={() =>
+                                {
+                                    navigate("/admin/settings")
+                                    setMobileOpen(false);
+                                }
+                            }
                     >
                         <div className="relative" >
                             <img
