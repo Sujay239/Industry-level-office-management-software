@@ -5,14 +5,16 @@ import { NotificationProvider } from "./components/NotificationProvider";
 import { UserProvider } from "./components/UserProvider";
 import { ThemeProvider } from "./hooks/use-theme";
 import Approutes from "./routes";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App: React.FC = () => {
   return (
     <>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <NotificationProvider>
           <UserProvider>
             <BrowserRouter>
+              <ScrollToTop />
               <Approutes />
             </BrowserRouter>
           </UserProvider>

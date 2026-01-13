@@ -9,6 +9,7 @@ import Attendance from './pages/users/Attendance';
 import Chats from './pages/users/Chats';
 import ApplyLeave from './pages/users/ApplyLeave';
 import Meetings from './pages/users/Meetings';
+import Holidays from './pages/users/Holidays';
 import Settings from './pages/users/Settings';
 import Payroll from './pages/users/Payroll';
 import AdminLayout from './layouts/AdminLayout';
@@ -101,6 +102,10 @@ const routes: RouteObject[] = [
       {
         path: "meetings",
         element: <Meetings />,
+      },
+      {
+        path: "holidays",
+        element: <Holidays />,
       },
     ],
   },

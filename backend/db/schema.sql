@@ -14,6 +14,7 @@ CREATE TYPE chat_type AS ENUM ('direct', 'group', 'space', 'announcement');
 CREATE TYPE message_sender_type AS ENUM ('user', 'system', 'bot');
 CREATE TYPE attachment_type AS ENUM ('image', 'file', 'video', 'audio');
 CREATE TYPE notification_type AS ENUM ('success', 'error', 'info', 'warning', 'reminder');
+CREATE TYPE holiday_type AS ENUM ('national', 'festivals', 'gazetted', 'observance');
 
 -- ====================================================
 -- 2. DEPARTMENTS (New - for Organizational Scaling)
@@ -203,6 +204,7 @@ CREATE TABLE holidays (
     name VARCHAR(255) NOT NULL,
     date DATE NOT NULL,
     day VARCHAR(20),
+    type holiday_type DEFAULT 'national' NOT NULL,
     is_recurring BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

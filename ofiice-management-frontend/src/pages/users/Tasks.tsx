@@ -226,321 +226,323 @@ const Tasks = () => {
   );
 
   return (
-    <div className="space-y-8 p-1 relative">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
+      <div className="space-y-8">
 
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-1 px-4 py-4 pr-16 lg:pr-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div className="ml-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white ">
-            Task Management
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
-            Track your team's progress and manage assignments.
-          </p>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total"
-          value={totalTasks}
-          icon={<ListTodo className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
-          bgClass="bg-blue-50 dark:bg-blue-900/20"
-        />
-        <StatsCard
-          title="Active"
-          value={inProgressTasks}
-          icon={<Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
-          bgClass="bg-amber-50 dark:bg-amber-900/20"
-        />
-        <StatsCard
-          title="Pending"
-          value={pendingTasks}
-          icon={<AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />}
-          bgClass="bg-red-50 dark:bg-red-900/20"
-        />
-        <StatsCard
-          title="Done"
-          value={completedTasks}
-          icon={<CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />}
-          bgClass="bg-green-50 dark:bg-green-900/20"
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
-        {/* Toolbar */}
-        <div className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              type="search"
-              placeholder="Search tasks..."
-              className="pl-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 focus-visible:ring-green-500 text-slate-900 dark:text-white"
-              value={searchTerm}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-            />
+        <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="">
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white max-sm:hidden">
+              Task Management
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+              Track your team's progress and manage assignments.
+            </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            {/* Clear Filter Badge */}
-            {isFilterActive && (
-              <Button
-                variant="ghost"
-                onClick={clearFilters}
-                className="h-9 px-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <XCircle size={14} className="mr-1" /> Clear
-              </Button>
-            )}
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Total"
+            value={totalTasks}
+            icon={<ListTodo className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+            bgClass="bg-blue-50 dark:bg-blue-900/20"
+          />
+          <StatsCard
+            title="Active"
+            value={inProgressTasks}
+            icon={<Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
+            bgClass="bg-amber-50 dark:bg-amber-900/20"
+          />
+          <StatsCard
+            title="Pending"
+            value={pendingTasks}
+            icon={<AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />}
+            bgClass="bg-red-50 dark:bg-red-900/20"
+          />
+          <StatsCard
+            title="Done"
+            value={completedTasks}
+            icon={<CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />}
+            bgClass="bg-green-50 dark:bg-green-900/20"
+          />
+        </div>
 
-            {/* Functional Filter Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+        {/* Main Content Area */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
+          {/* Toolbar */}
+          <div className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="search"
+                placeholder="Search tasks..."
+                className="pl-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 focus-visible:ring-green-500 text-slate-900 dark:text-white"
+                value={searchTerm}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              {/* Clear Filter Badge */}
+              {isFilterActive && (
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className={`h-10 border-dashed w-full md:w-auto ${isFilterActive ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" : "border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"}`}
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="h-9 px-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <Filter size={16} className="mr-2" /> Filter
+                  <XCircle size={14} className="mr-1" /> Clear
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-              >
-                <DropdownMenuLabel className="dark:text-slate-200">Filter by Status</DropdownMenuLabel>
-                <DropdownMenuSeparator className="dark:bg-slate-800" />
-                <DropdownMenuCheckboxItem
-                  checked={statusFilter === "all"}
-                  onCheckedChange={() => setStatusFilter("all")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  All Statuses
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={statusFilter === "In Progress"}
-                  onCheckedChange={() => setStatusFilter("In Progress")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  In Progress
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={statusFilter === "Pending"}
-                  onCheckedChange={() => setStatusFilter("Pending")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  Pending
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={statusFilter === "Completed"}
-                  onCheckedChange={() => setStatusFilter("Completed")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  Completed
-                </DropdownMenuCheckboxItem>
+              )}
 
-                <DropdownMenuSeparator className="dark:bg-slate-800" />
-                <DropdownMenuLabel className="dark:text-slate-200">Filter by Priority</DropdownMenuLabel>
-                <DropdownMenuSeparator className="dark:bg-slate-800" />
-                <DropdownMenuCheckboxItem
-                  checked={priorityFilter === "all"}
-                  onCheckedChange={() => setPriorityFilter("all")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+              {/* Functional Filter Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-10 border-dashed w-full md:w-auto ${isFilterActive ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" : "border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"}`}
+                  >
+                    <Filter size={16} className="mr-2" /> Filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                 >
-                  All Priorities
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={priorityFilter === "High"}
-                  onCheckedChange={() => setPriorityFilter("High")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  High
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={priorityFilter === "Medium"}
-                  onCheckedChange={() => setPriorityFilter("Medium")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  Medium
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={priorityFilter === "Low"}
-                  onCheckedChange={() => setPriorityFilter("Low")}
-                  className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
-                >
-                  Low
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuLabel className="dark:text-slate-200">Filter by Status</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="dark:bg-slate-800" />
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "all"}
+                    onCheckedChange={() => setStatusFilter("all")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    All Statuses
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "In Progress"}
+                    onCheckedChange={() => setStatusFilter("In Progress")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    In Progress
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "Pending"}
+                    onCheckedChange={() => setStatusFilter("Pending")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    Pending
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "Completed"}
+                    onCheckedChange={() => setStatusFilter("Completed")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    Completed
+                  </DropdownMenuCheckboxItem>
+
+                  <DropdownMenuSeparator className="dark:bg-slate-800" />
+                  <DropdownMenuLabel className="dark:text-slate-200">Filter by Priority</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="dark:bg-slate-800" />
+                  <DropdownMenuCheckboxItem
+                    checked={priorityFilter === "all"}
+                    onCheckedChange={() => setPriorityFilter("all")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    All Priorities
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={priorityFilter === "High"}
+                    onCheckedChange={() => setPriorityFilter("High")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    High
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={priorityFilter === "Medium"}
+                    onCheckedChange={() => setPriorityFilter("Medium")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    Medium
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={priorityFilter === "Low"}
+                    onCheckedChange={() => setPriorityFilter("Low")}
+                    className="cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800"
+                  >
+                    Low
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
 
-        {/* === RESPONSIVE VIEW TOGGLING ===
+          {/* === RESPONSIVE VIEW TOGGLING ===
             1. Desktop View: <Table> (hidden on small screens)
             2. Mobile View: <div className="grid"> (hidden on medium+ screens)
         */}
 
-        {/* --- DESKTOP TABLE VIEW (md:block) --- */}
-        <div className="hidden md:block relative w-full overflow-auto">
-          <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
-              <TableRow className="border-slate-200 dark:border-slate-800">
-                <TableHead className="w-[100px] font-semibold text-slate-700 dark:text-slate-300">ID</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Task Details</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Priority</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
-                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTasks.length > 0 ? (
-                filteredTasks.map((task) => (
-                  <TableRow key={task.id} className="group border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <TableCell className="font-mono text-xs font-medium text-slate-500 dark:text-slate-500">
-                      Task-{task.id}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col py-1">
-                        <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
-                          {task.title}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1 mt-0.5">
-                          {task.project}
-                          <span className="text-slate-300 dark:text-slate-700">•</span>
-                          <span className={
-                            new Date(task.dueDate) < new Date() ? "text-red-500 font-medium" : ""
-                          }>
-                            {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          {/* --- DESKTOP TABLE VIEW (md:block) --- */}
+          <div className="hidden md:block relative w-full overflow-auto">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                <TableRow className="border-slate-200 dark:border-slate-800">
+                  <TableHead className="w-[100px] font-semibold text-slate-700 dark:text-slate-300">ID</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Task Details</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Priority</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTasks.length > 0 ? (
+                  filteredTasks.map((task) => (
+                    <TableRow key={task.id} className="group border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                      <TableCell className="font-mono text-xs font-medium text-slate-500 dark:text-slate-500">
+                        Task-{task.id}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col py-1">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                            {task.title}
                           </span>
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`font-medium border ${getPriorityStyle(task.priority)}`}>
-                        {task.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Badge
-                          variant="outline"
-                          className={`pl-1.5 border ${getStatusStyle(task.status)}`}
-                        >
-                          {getStatusIcon(task.status)}
-                          {task.status}
+                          <span className="text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1 mt-0.5">
+                            {task.project}
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className={
+                              new Date(task.dueDate) < new Date() ? "text-red-500 font-medium" : ""
+                            }>
+                              {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`font-medium border ${getPriorityStyle(task.priority)}`}>
+                          {task.priority}
                         </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <ActionMenu task={task} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Badge
+                            variant="outline"
+                            className={`pl-1.5 border ${getStatusStyle(task.status)}`}
+                          >
+                            {getStatusIcon(task.status)}
+                            {task.status}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <ActionMenu task={task} />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center text-slate-500 dark:text-slate-400">
+                      No tasks found matching your filters.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-slate-500 dark:text-slate-400">
-                    No tasks found matching your filters.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-        {/* --- MOBILE CARD VIEW (md:hidden) --- */}
-        <div className="md:hidden p-4 grid grid-cols-1 gap-4">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <div key={task.id} className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm relative flex flex-col gap-3">
-                {/* Header: ID + Actions */}
-                <div className="flex justify-between items-start">
-                  <span className="font-mono text-xs font-medium text-slate-500 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                    {task.id}
-                  </span>
-                  <div className="-mt-1 -mr-2">
-                    <ActionMenu task={task} />
+          {/* --- MOBILE CARD VIEW (md:hidden) --- */}
+          <div className="md:hidden p-4 grid grid-cols-1 gap-4">
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map((task) => (
+                <div key={task.id} className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm relative flex flex-col gap-3">
+                  {/* Header: ID + Actions */}
+                  <div className="flex justify-between items-start">
+                    <span className="font-mono text-xs font-medium text-slate-500 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                      {task.id}
+                    </span>
+                    <div className="-mt-1 -mr-2">
+                      <ActionMenu task={task} />
+                    </div>
+                  </div>
+
+                  {/* Title & Project */}
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-lg leading-tight">
+                      {task.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      {task.project}
+                    </p>
+                  </div>
+
+                  {/* Badges Row */}
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="outline" className={`font-medium border ${getPriorityStyle(task.priority)}`}>
+                      {task.priority}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={`pl-1.5 border ${getStatusStyle(task.status)}`}
+                    >
+                      {getStatusIcon(task.status)}
+                      {task.status}
+                    </Badge>
+                  </div>
+
+                  {/* Footer: Date */}
+                  <div className="pt-3 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                    <Calendar className="w-3.5 h-3.5 mr-2" />
+                    <span className={new Date(task.dueDate) < new Date() ? "text-red-500 font-medium" : ""}>
+                      Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+                <p>No tasks found.</p>
+              </div>
+            )}
+          </div>
 
-                {/* Title & Project */}
+        </Card>
+
+
+
+        {/* --- Delete Confirmation Modal --- */}
+        {taskToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-lg leading-tight">
-                    {task.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    {task.project}
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Delete Task?</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                    Are you sure you want to delete this task? This action cannot be undone.
                   </p>
                 </div>
-
-                {/* Badges Row */}
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <Badge variant="outline" className={`font-medium border ${getPriorityStyle(task.priority)}`}>
-                    {task.priority}
-                  </Badge>
-                  <Badge
+                <div className="flex gap-3 w-full mt-2">
+                  <Button
                     variant="outline"
-                    className={`pl-1.5 border ${getStatusStyle(task.status)}`}
+                    className="flex-1 border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
+                    onClick={() => setTaskToDelete(null)}
                   >
-                    {getStatusIcon(task.status)}
-                    {task.status}
-                  </Badge>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white border-none cursor-pointer"
+                    onClick={confirmDelete}
+                  >
+                    Delete
+                  </Button>
                 </div>
-
-                {/* Footer: Date */}
-                <div className="pt-3 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center text-sm text-slate-500 dark:text-slate-400">
-                  <Calendar className="w-3.5 h-3.5 mr-2" />
-                  <span className={new Date(task.dueDate) < new Date() ? "text-red-500 font-medium" : ""}>
-                    Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-10 text-slate-500 dark:text-slate-400">
-              <p>No tasks found.</p>
-            </div>
-          )}
-        </div>
-
-      </Card>
-
-
-
-      {/* --- Delete Confirmation Modal --- */}
-      {taskToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Delete Task?</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                  Are you sure you want to delete this task? This action cannot be undone.
-                </p>
-              </div>
-              <div className="flex gap-3 w-full mt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
-                  onClick={() => setTaskToDelete(null)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white border-none cursor-pointer"
-                  onClick={confirmDelete}
-                >
-                  Delete
-                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
+      </div>
     </div>
   );
 };

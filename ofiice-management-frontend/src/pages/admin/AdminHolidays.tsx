@@ -26,7 +26,7 @@ interface Holiday {
 const AdminHolidays: React.FC = () => {
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [newHoliday, setNewHoliday] = useState({ name: '', date: '', type: 'National Holiday' });
+    const [newHoliday, setNewHoliday] = useState({ name: '', date: '', type: 'national' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
     const [deleteConfirmationId, setDeleteConfirmationId] = useState<number | null>(null);
@@ -92,7 +92,7 @@ const AdminHolidays: React.FC = () => {
                 const addedHoliday = await response.json();
                 setHolidays(prev => [...prev, addedHoliday].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
                 showSuccess('Holiday added successfully');
-                setNewHoliday({ name: '', date: '', type: 'National Holiday' });
+                setNewHoliday({ name: '', date: '', type: 'national' });
             }
         } catch (error) {
             console.error(error);
@@ -113,7 +113,7 @@ const AdminHolidays: React.FC = () => {
 
     const cancelEditing = () => {
         setEditingHoliday(null);
-        setNewHoliday({ name: '', date: '', type: 'National Holiday' });
+        setNewHoliday({ name: '', date: '', type: 'national' });
     };
 
     const confirmDeleteHoliday = (id: number) => {
@@ -152,14 +152,14 @@ const AdminHolidays: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-6 lg:p-10 animate-in fade-in duration-500">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Header */}
-                <div>
+                <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 max-sm:hidden">
                                 <CalendarIcon className="h-8 w-8 text-blue-600 dark:!text-white" /> Holiday Management
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400 mt-2">
@@ -225,10 +225,10 @@ const AdminHolidays: React.FC = () => {
                                         value={newHoliday.type}
                                         onChange={e => setNewHoliday({ ...newHoliday, type: e.target.value })}
                                     >
-                                        <option value="National Holiday">National Holiday</option>
-                                        <option value="Festival">Festival</option>
-                                        <option value="Gazetted">Gazetted</option>
-                                        <option value="Observance">Observance</option>
+                                        <option value="national">National Holiday</option>
+                                        <option value="festivals">Festival</option>
+                                        <option value="gazetted">Gazetted</option>
+                                        <option value="observance">Observance</option>
                                     </select>
                                 </div>
                                 <Button type="submit" disabled={isSubmitting} className={`w-full text-white cursor-pointer ${editingHoliday ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
@@ -322,7 +322,7 @@ const HolidayItem = ({ holiday, onDelete, onEdit, isPast = false, isToday = fals
                 </div>
                 <div>
                     <h3 className={`font-semibold ${isPast ? 'text-slate-500 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>{holiday.name}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{holiday.day} • {holiday.type}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{holiday.day} • {holiday.type.charAt(0).toUpperCase() + holiday.type.slice(1)}</p>
                 </div>
             </div>
             <div className="flex gap-1">

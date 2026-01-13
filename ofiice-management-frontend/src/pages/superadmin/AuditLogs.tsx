@@ -110,12 +110,12 @@ const AuditLogs: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-6 lg:p-10 animate-in fade-in duration-500">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 max-sm:hidden">
                             <ShieldAlert className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
                             Audit Logs
                         </h1>
@@ -226,7 +226,7 @@ const AuditLogs: React.FC = () => {
                                     onClick={() => handlePageChange(pagination.page - 1)}
                                     disabled={pagination.page <= 1 || isLoading}
                                 >
-                                    <ChevronLeft className="h-4 w-4 dark:text-white text-black"/>
+                                    <ChevronLeft className="h-4 w-4 dark:text-white text-black" />
                                     Previous
                                 </Button>
                                 <Button

@@ -236,280 +236,282 @@ const Attendance = () => {
   };
 
   return (
-    <div className="max-md:px-4 space-y-8 animate-in fade-in duration-500 mx-4">
-      {/* --- Header Section --- */}
-      {/* --- Header Section (Sticky) --- */}
-      <div className="sticky z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div className="ml-8 mt-0">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 ml-2">
-            My Attendance
-          </h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm ">
-            Check in/out and view your monthly records.
-          </p>
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
+      <div className="space-y-8">
+        {/* --- Header Section --- */}
+        {/* --- Header Section (Sticky) --- */}
+        <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="ml-0 mt-0">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 ml-2 max-sm:hidden">
+              My Attendance
+            </h1>
+            <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm ">
+              Check in/out and view your monthly records.
+            </p>
+          </div>
+          <div className="text-right hidden sm:block mr-8">
+            <p className="text-2xl font-mono font-bold text-slate-900 dark:text-white">
+              {currentTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {currentTime.toLocaleDateString([], {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
         </div>
-        <div className="text-right hidden sm:block mr-8">
-          <p className="text-2xl font-mono font-bold text-slate-900 dark:text-white">
-            {currentTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {currentTime.toLocaleDateString([], {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </div>
-      </div>
 
-      {/* --- Main Action Area (Split Grid) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 1. Clock In/Out Widget (Takes up 1 column) */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-lg bg-linear-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
-          <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
-            {/* Visual Timer Circle */}
-            <div
-              className={`
+        {/* --- Main Action Area (Split Grid) --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 1. Clock In/Out Widget (Takes up 1 column) */}
+          <Card className="border-slate-200 dark:border-slate-800 shadow-lg bg-linear-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+            <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
+              {/* Visual Timer Circle */}
+              <div
+                className={`
                     w-40 h-40 rounded-full border-4 flex items-center justify-center mb-6 shadow-2xl transition-all duration-500 relative
                     ${isCheckedIn
-                  ? "border-green-500 bg-green-500/10 shadow-green-500/20"
-                  : "border-slate-500 bg-white/5 shadow-black/40"
-                }
-                `}
-            >
-              <div className="text-center">
-                <span className="block text-xs text-slate-400 font-medium uppercase tracking-widest mb-1">
-                  {isCheckedIn ? "Duration" : "Clocked Out"}
-                </span>
-                <span className="block text-3xl font-bold font-mono tracking-tighter">
-                  {isCheckedIn
-                    ? elapsedTime
-                    : currentTime.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
-                </span>
-              </div>
-            </div>
-
-            {/* Clock Button */}
-            <div className="w-full max-w-xs space-y-4">
-              <Button
-                disabled={isClockingIn}
-                onClick={handleClockAction}
-                className={`
-                            w-full h-12 text-lg font-bold rounded-xl shadow-lg transition-all duration-300 transform active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
-                            ${isCheckedIn
-                    ? "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20 border-none"
-                    : "bg-green-500 hover:bg-green-600 text-white shadow-green-900/20 border-none"
+                    ? "border-green-500 bg-green-500/10 shadow-green-500/20"
+                    : "border-slate-500 bg-white/5 shadow-black/40"
                   }
-                        `}
+                `}
               >
-                {isCheckedIn ? "Clock Out" : "Clock In"}
-                {isClockingIn && <span className="ml-2 w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin inline-block"></span>}
-              </Button>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-                <MapPin size={14} />
-                <span>Location: Office HQ (Detected)</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 2. Stats Grid (Takes up 2 columns) */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StatsCard
-            title="Total Working Days"
-            value={stats.totalWorkingDays.toString()}
-            subtext="This Month"
-            icon={<CalendarDays className="text-blue-500" />}
-            bgClass="bg-blue-50 dark:bg-blue-900/10"
-          />
-          <StatsCard
-            title="Present Days"
-            value={stats.presentDays.toString()}
-            subtext={`On Time: ${stats.presentDays - stats.lateArrivals}`}
-            icon={<CheckCircle2 className="text-green-500" />}
-            bgClass="bg-green-50 dark:bg-green-900/10"
-          />
-          <StatsCard
-            title="Late Arrivals"
-            value={stats.lateArrivals.toString()}
-            subtext="-1hr penalty applied"
-            icon={<Timer className="text-amber-500" />}
-            bgClass="bg-amber-50 dark:bg-amber-900/10"
-          />
-          <StatsCard
-            title="Leaves Taken"
-            value={stats.leavesTaken.toString()}
-            subtext=""
-            icon={<XCircle className="text-red-500" />}
-            bgClass="bg-red-50 dark:bg-red-900/10"
-          />
-
-          {/* Recent Activity */}
-          <Card className="col-span-1 sm:col-span-2 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                <History size={16} /> Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {history.slice(0, 2).map((record) => (
-                <div key={record.id} className="flex items-center justify-between text-sm py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                  <span className="text-slate-900 dark:text-slate-200">
-                    {record.date === new Date().toISOString().split('T')[0] ? "Today" : new Date(record.date).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                <div className="text-center">
+                  <span className="block text-xs text-slate-400 font-medium uppercase tracking-widest mb-1">
+                    {isCheckedIn ? "Duration" : "Clocked Out"}
                   </span>
-                  <span className="font-mono text-slate-500">
-                    {formatTime(record.checkIn)} - {formatTime(record.checkOut)}
+                  <span className="block text-3xl font-bold font-mono tracking-tighter">
+                    {isCheckedIn
+                      ? elapsedTime
+                      : currentTime.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
                   </span>
                 </div>
-              ))}
+              </div>
+
+              {/* Clock Button */}
+              <div className="w-full max-w-xs space-y-4">
+                <Button
+                  disabled={isClockingIn}
+                  onClick={handleClockAction}
+                  className={`
+                            w-full h-12 text-lg font-bold rounded-xl shadow-lg transition-all duration-300 transform active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                            ${isCheckedIn
+                      ? "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20 border-none"
+                      : "bg-green-500 hover:bg-green-600 text-white shadow-green-900/20 border-none"
+                    }
+                        `}
+                >
+                  {isCheckedIn ? "Clock Out" : "Clock In"}
+                  {isClockingIn && <span className="ml-2 w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin inline-block"></span>}
+                </Button>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                  <MapPin size={14} />
+                  <span>Location: Office HQ (Detected)</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
 
-      {/* --- Attendance History List --- */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            Attendance Log
-          </h2>
-          <Button
-            onClick={downloadReport}
-            variant="outline"
-            size="sm"
-            className="hidden sm:flex dark:border-slate-700 dark:bg-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            <Download size={16} className="mr-2" /> Download Report
-          </Button>
+          {/* 2. Stats Grid (Takes up 2 columns) */}
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <StatsCard
+              title="Total Working Days"
+              value={stats.totalWorkingDays.toString()}
+              subtext="This Month"
+              icon={<CalendarDays className="text-blue-500" />}
+              bgClass="bg-blue-50 dark:bg-blue-900/10"
+            />
+            <StatsCard
+              title="Present Days"
+              value={stats.presentDays.toString()}
+              subtext={`On Time: ${stats.presentDays - stats.lateArrivals}`}
+              icon={<CheckCircle2 className="text-green-500" />}
+              bgClass="bg-green-50 dark:bg-green-900/10"
+            />
+            <StatsCard
+              title="Late Arrivals"
+              value={stats.lateArrivals.toString()}
+              subtext="-1hr penalty applied"
+              icon={<Timer className="text-amber-500" />}
+              bgClass="bg-amber-50 dark:bg-amber-900/10"
+            />
+            <StatsCard
+              title="Leaves Taken"
+              value={stats.leavesTaken.toString()}
+              subtext=""
+              icon={<XCircle className="text-red-500" />}
+              bgClass="bg-red-50 dark:bg-red-900/10"
+            />
+
+            {/* Recent Activity */}
+            <Card className="col-span-1 sm:col-span-2 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  <History size={16} /> Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.slice(0, 2).map((record) => (
+                  <div key={record.id} className="flex items-center justify-between text-sm py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <span className="text-slate-900 dark:text-slate-200">
+                      {record.date === new Date().toISOString().split('T')[0] ? "Today" : new Date(record.date).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                    </span>
+                    <span className="font-mono text-slate-500">
+                      {formatTime(record.checkIn)} - {formatTime(record.checkOut)}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Desktop View (Table) */}
-        <div className="hidden md:block rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm bg-white dark:bg-slate-950">
-          <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
-              <TableRow className="border-slate-200 dark:border-slate-800">
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Date
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Check In
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Check Out
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Working Hours
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Status
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {history.map((record) => (
-                <TableRow
-                  key={record.id}
-                  className="border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <TableCell className="font-medium text-slate-900 dark:text-slate-200">
+        {/* --- Attendance History List --- */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Attendance Log
+            </h2>
+            <Button
+              onClick={downloadReport}
+              variant="outline"
+              size="sm"
+              className="hidden sm:flex dark:border-slate-700 dark:bg-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Download size={16} className="mr-2" /> Download Report
+            </Button>
+          </div>
+
+          {/* Desktop View (Table) */}
+          <div className="hidden md:block rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm bg-white dark:bg-slate-950">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                <TableRow className="border-slate-200 dark:border-slate-800">
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Date
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Check In
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Check Out
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Working Hours
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Status
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {history.map((record) => (
+                  <TableRow
+                    key={record.id}
+                    className="border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-200">
+                      {new Date(record.date).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell className="font-mono text-slate-600 dark:text-slate-400">
+                      {formatTime(record.checkIn)}
+                    </TableCell>
+                    <TableCell className="font-mono text-slate-600 dark:text-slate-400">
+                      {formatTime(record.checkOut)}
+                    </TableCell>
+                    <TableCell className="font-mono text-slate-900 dark:text-white font-medium">
+                      {record.totalHours}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={`font-medium border ${getStatusStyle(
+                          record.status
+                        )}`}
+                      >
+                        {record.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile View (Cards) */}
+          <div className="md:hidden space-y-4">
+            {/* Mobile Download Button */}
+            <Button
+              onClick={downloadReport}
+              variant="outline"
+              className="w-full flex sm:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white mb-4"
+            >
+              <Download size={16} className="mr-2" /> Download CSV
+            </Button>
+
+            {history.map((record) => (
+              <div
+                key={record.id}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col gap-3"
+              >
+                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {new Date(record.date).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
                     })}
-                  </TableCell>
-                  <TableCell className="font-mono text-slate-600 dark:text-slate-400">
-                    {formatTime(record.checkIn)}
-                  </TableCell>
-                  <TableCell className="font-mono text-slate-600 dark:text-slate-400">
-                    {formatTime(record.checkOut)}
-                  </TableCell>
-                  <TableCell className="font-mono text-slate-900 dark:text-white font-medium">
-                    {record.totalHours}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`font-medium border ${getStatusStyle(
-                        record.status
-                      )}`}
-                    >
-                      {record.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Mobile View (Cards) */}
-        <div className="md:hidden space-y-4">
-          {/* Mobile Download Button */}
-          <Button
-            onClick={downloadReport}
-            variant="outline"
-            className="w-full flex sm:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white mb-4"
-          >
-            <Download size={16} className="mr-2" /> Download CSV
-          </Button>
-
-          {history.map((record) => (
-            <div
-              key={record.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col gap-3"
-            >
-              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {new Date(record.date).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={`font-medium border ${getStatusStyle(
-                    record.status
-                  )}`}
-                >
-                  {record.status}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="block text-slate-400 text-xs mb-1">
-                    Check In
                   </span>
-                  <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
-                    {formatTime(record.checkIn)}
-                  </span>
+                  <Badge
+                    variant="outline"
+                    className={`font-medium border ${getStatusStyle(
+                      record.status
+                    )}`}
+                  >
+                    {record.status}
+                  </Badge>
                 </div>
-                <div className="text-right">
-                  <span className="block text-slate-400 text-xs mb-1">
-                    Check Out
-                  </span>
-                  <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
-                    {formatTime(record.checkOut)}
-                  </span>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="block text-slate-400 text-xs mb-1">
+                      Check In
+                    </span>
+                    <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
+                      {formatTime(record.checkIn)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-slate-400 text-xs mb-1">
+                      Check Out
+                    </span>
+                    <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
+                      {formatTime(record.checkOut)}
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-2 flex items-center justify-between text-sm font-medium text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg mt-1">
+                  <span>Total Hours</span>
+                  <span className="font-mono">{record.totalHours}</span>
                 </div>
               </div>
-              <div className="pt-2 flex items-center justify-between text-sm font-medium text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg mt-1">
-                <span>Total Hours</span>
-                <span className="font-mono">{record.totalHours}</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

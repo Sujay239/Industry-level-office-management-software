@@ -34,6 +34,7 @@ import chatRoutes from './routes/chat';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { handleSocketConnection } from './controllers/chatController';
+import { initScheduler } from './scheduler';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,6 +157,9 @@ app.get('/health-check', (req, res) => {
 
 // Initialize Socket.IO
 handleSocketConnection(io);
+
+// Initialize Scheduler
+initScheduler();
 
 // Force restart 13
 

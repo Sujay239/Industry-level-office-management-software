@@ -332,11 +332,10 @@ const AdminMeetings: React.FC = () => {
               className="relative overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:shadow-md transition-all"
             >
               <div
-                className={`absolute top-0 left-0 w-1 h-full ${
-                  parseLocal(meeting.start_time) > now
-                    ? "bg-blue-500"
-                    : "bg-slate-300"
-                }`}
+                className={`absolute top-0 left-0 w-1 h-full ${parseLocal(meeting.start_time) > now
+                  ? "bg-blue-500"
+                  : "bg-slate-300"
+                  }`}
               ></div>
               <CardHeader className="pb-2 pl-6">
                 <div className="flex justify-between items-start">
@@ -359,11 +358,10 @@ const AdminMeetings: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-8 w-8 ${
-                        isMeetingPast
-                          ? "text-slate-300 cursor-not-allowed"
-                          : "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer"
-                      }`}
+                      className={`h-8 w-8 ${isMeetingPast
+                        ? "text-slate-300 cursor-not-allowed"
+                        : "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer"
+                        }`}
                       onClick={() => !isMeetingPast && openEditModal(meeting)}
                       title={
                         isMeetingPast ? "Cannot edit past meeting" : "Edit"
@@ -414,11 +412,10 @@ const AdminMeetings: React.FC = () => {
                 {meeting.join_url && (
                   <div className="pt-2">
                     <Button
-                      className={`w-full gap-2 ${
-                        isMeetingPast
-                          ? "bg-slate-100 text-slate-400 cursor-not-allowed hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-500"
-                          : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                      }`}
+                      className={`w-full gap-2 ${isMeetingPast
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-500"
+                        : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        }`}
                       onClick={() =>
                         !isMeetingPast &&
                         window.open(meeting.join_url, "_blank")
@@ -441,10 +438,10 @@ const AdminMeetings: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-4 md:p-10 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 space-y-8 animate-in fade-in duration-500">
+      <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 max-sm:hidden">
             <Users className="h-8 w-8 text-blue-500" /> Meeting Scheduler
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
@@ -842,10 +839,10 @@ const AdminMeetings: React.FC = () => {
                   })}
                   {(!viewMeeting.user_id ||
                     viewMeeting.user_id.length === 0) && (
-                    <span className="text-sm text-slate-400 italic">
-                      No participants selected.
-                    </span>
-                  )}
+                      <span className="text-sm text-slate-400 italic">
+                        No participants selected.
+                      </span>
+                    )}
                 </div>
               </div>
 

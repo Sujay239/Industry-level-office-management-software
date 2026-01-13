@@ -47,13 +47,17 @@ const navItems: NavItem[] = [
     { label: "Past Employees", to: "/admin/past-employees", icon: <Clock size={20} /> },
 ];
 
-const AdminSidebar: React.FC = () => {
+interface AdminSidebarProps {
+    mobileOpen: boolean;
+    setMobileOpen: (open: boolean) => void;
+}
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ mobileOpen, setMobileOpen }) => {
     const API_BASE_URL = import.meta.env.VITE_BASE_URL;
     const { user: contextUser } = useUser();
     const [userData, setUserData] = useState<any>(null);
     const navigate = useNavigate();
     const [expanded, setExpanded] = useState(true);
-    const [mobileOpen, setMobileOpen] = useState(false);
 
     // Auto-close mobile menu on resize
     useEffect(() => {
@@ -108,23 +112,17 @@ const AdminSidebar: React.FC = () => {
             {/* Mobile Overlay */}
             {mobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-black/50 z-[90] lg:hidden backdrop-blur-sm transition-opacity"
                     onClick={() => setMobileOpen(false)}
                 />
             )}
 
-            {/* --- Mobile Trigger Button (Floating) --- */}
-            <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden fixed top-4 right-4 z-50 p-2 rounded-lg bg-slate-900 dark:bg-slate-800 text-white shadow-lg shadow-slate-900/20 border border-slate-800 dark:border-slate-700 hover:bg-slate-800 transition-all"
-            >
-                <Menu size={24} />
-            </button>
+
 
             {/* --- Sidebar Container --- */}
             <aside
                 className={`
-          fixed lg:static inset-y-0 left-0 z-50
+          fixed lg:static inset-y-0 left-0 z-[100]
           bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
           transition-all duration-300 ease-in-out
           flex flex-col
@@ -216,11 +214,10 @@ const AdminSidebar: React.FC = () => {
                     {/* User Profile */}
                     <div
                         className={`flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isExpandedVisual ? "" : "justify-center"
-                            }`} onClick={() =>
-                                {
-                                    navigate("/admin/settings")
-                                    setMobileOpen(false);
-                                }
+                            }`} onClick={() => {
+                                navigate("/admin/settings")
+                                setMobileOpen(false);
+                            }
                             }
                     >
                         <div className="relative" >

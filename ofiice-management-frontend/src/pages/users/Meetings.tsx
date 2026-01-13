@@ -141,79 +141,81 @@ const Meetings: React.FC = () => {
     };
 
     return (
-        <div className="w-full p-4 md:p-10 space-y-8 animate-in fade-in duration-500">
-            <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <CalendarCheck2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
+            <div className="space-y-8">
+                <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 transition-all duration-200 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <CalendarCheck2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white max-sm:hidden">My Meetings</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">View and join your scheduled meetings</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Meetings</h1>
-                    <p className="text-slate-500 dark:text-slate-400">View and join your scheduled meetings</p>
-                </div>
-            </div>
 
-            <Tabs defaultValue="today" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 lg:w-[600px] mb-8 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <TabsTrigger value="today" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Today</TabsTrigger>
-                    <TabsTrigger value="upcoming" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Upcoming</TabsTrigger>
-                    <TabsTrigger value="past" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Past</TabsTrigger>
-                    <TabsTrigger value="all" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">All</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="today" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 lg:w-[600px] mb-8 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                        <TabsTrigger value="today" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Today</TabsTrigger>
+                        <TabsTrigger value="upcoming" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Upcoming</TabsTrigger>
+                        <TabsTrigger value="past" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">Past</TabsTrigger>
+                        <TabsTrigger value="all" className="cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 dark:text-slate-400">All</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="today" className="space-y-4 min-h-[50vh]">
-                    {renderMeetingList(todayMeetings, "No meetings scheduled for today.")}
-                </TabsContent>
+                    <TabsContent value="today" className="space-y-4 min-h-[50vh]">
+                        {renderMeetingList(todayMeetings, "No meetings scheduled for today.")}
+                    </TabsContent>
 
-                <TabsContent value="upcoming" className="space-y-4 min-h-[50vh]">
-                    {renderMeetingList(futureMeetings, "No upcoming meetings found.")}
-                </TabsContent>
+                    <TabsContent value="upcoming" className="space-y-4 min-h-[50vh]">
+                        {renderMeetingList(futureMeetings, "No upcoming meetings found.")}
+                    </TabsContent>
 
-                <TabsContent value="past" className="space-y-4 min-h-[50vh]">
-                    {renderMeetingList(pastMeetings, "No past meetings found.")}
-                </TabsContent>
+                    <TabsContent value="past" className="space-y-4 min-h-[50vh]">
+                        {renderMeetingList(pastMeetings, "No past meetings found.")}
+                    </TabsContent>
 
-                <TabsContent value="all" className="space-y-4 min-h-[50vh]">
-                    {renderMeetingList(meetings, "No meetings found.")}
-                </TabsContent>
-            </Tabs>
+                    <TabsContent value="all" className="space-y-4 min-h-[50vh]">
+                        {renderMeetingList(meetings, "No meetings found.")}
+                    </TabsContent>
+                </Tabs>
 
-            <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-                <DialogContent className="sm:max-w-[500px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                    <DialogHeader>
-                        <DialogTitle className="dark:text-white text-xl">Meeting Details</DialogTitle>
-                    </DialogHeader>
-                    {viewMeeting && (
-                        <div className="space-y-4 py-2">
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{viewMeeting.title}</h3>
-                                <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
-                                    <Clock className="h-4 w-4" />
-                                    {new Date(viewMeeting.start_time).toLocaleString('en-GB')} - {new Date(viewMeeting.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                            </div>
-
-                            <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                                <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{viewMeeting.description || "No description provided."}</p>
-                            </div>
-
-                            {viewMeeting.join_url && (
-                                <div className="pt-2">
-                                    <Button
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 cursor-pointer"
-                                        onClick={() => window.open(viewMeeting.join_url, '_blank')}
-                                        disabled={new Date(viewMeeting.end_time) < now}
-                                    >
-                                        <ExternalLink className="h-4 w-4" /> {new Date(viewMeeting.end_time) < now ? "Meeting Ended" : "Join Meeting"}
-                                    </Button>
-                                    <div className="text-xs text-center text-slate-400 mt-2 truncate px-2 select-all">
-                                        {viewMeeting.join_url}
+                <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+                    <DialogContent className="sm:max-w-[500px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                        <DialogHeader>
+                            <DialogTitle className="dark:text-white text-xl">Meeting Details</DialogTitle>
+                        </DialogHeader>
+                        {viewMeeting && (
+                            <div className="space-y-4 py-2">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{viewMeeting.title}</h3>
+                                    <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
+                                        <Clock className="h-4 w-4" />
+                                        {new Date(viewMeeting.start_time).toLocaleString('en-GB')} - {new Date(viewMeeting.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+
+                                <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{viewMeeting.description || "No description provided."}</p>
+                                </div>
+
+                                {viewMeeting.join_url && (
+                                    <div className="pt-2">
+                                        <Button
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 cursor-pointer"
+                                            onClick={() => window.open(viewMeeting.join_url, '_blank')}
+                                            disabled={new Date(viewMeeting.end_time) < now}
+                                        >
+                                            <ExternalLink className="h-4 w-4" /> {new Date(viewMeeting.end_time) < now ? "Meeting Ended" : "Join Meeting"}
+                                        </Button>
+                                        <div className="text-xs text-center text-slate-400 mt-2 truncate px-2 select-all">
+                                            {viewMeeting.join_url}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     );
 };

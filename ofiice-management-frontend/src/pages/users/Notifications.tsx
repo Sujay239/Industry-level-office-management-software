@@ -176,204 +176,206 @@ const Notifications: React.FC = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="space-y-8 max-sm:px-4 animate-in fade-in duration-500">
-      {/* --- Header Section --- */}
-      {/* --- Header Section (Sticky) --- */}
-      <div className="sticky z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md -mx-4 px-4 pr-16 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pr-8 py-4 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/50">
-        <div className="ml-8 mt-0">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            Notifications
-            {unreadCount > 0 && (
-              <span className="text-sm font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
-                {unreadCount} New
-              </span>
-            )}
-          </h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm">
-            Manage your alerts and activity updates.
-          </p>
-        </div>
-
-        {/* Toolbar */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg self-start md:self-auto">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all cursor-pointer ${filter === "all"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white "
-              }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter("unread")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === "unread"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
-              }`}
-          >
-            Unread
-          </button>
-        </div>
-      </div>
-
-      {/* --- Mark All Read Button (Conditional) --- */}
-      {unreadCount > 0 && filter !== "unread" && (
-        <div className="flex justify-end">
-          <button
-            onClick={markAllAsRead}
-            className="text-sm font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Check size={16} /> Mark all as read
-          </button>
-        </div>
-      )}
-
-      {/* --- Notifications List --- */}
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
       <div className="space-y-8">
-        {(
-          Object.entries(groupedNotifications) as [
-            keyof typeof groupedNotifications,
-            Notification[]
-          ][]
-        ).map(
-          ([group, items]) =>
-            items.length > 0 && (
-              <div key={group} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    {group}
-                  </span>
-                  <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
-                </div>
+        {/* --- Header Section --- */}
+        {/* --- Header Section (Sticky) --- */}
+        <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="mt-0">
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 max-sm:hidden">
+              Notifications
+              {unreadCount > 0 && (
+                <span className="text-sm font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
+                  {unreadCount} New
+                </span>
+              )}
+            </h1>
+            <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm">
+              Manage your alerts and activity updates.
+            </p>
+          </div>
 
-                <div className="grid grid-cols-1 gap-3">
-                  {items.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg self-start md:self-auto">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all cursor-pointer ${filter === "all"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white "
+                }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("unread")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === "unread"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                }`}
+            >
+              Unread
+            </button>
+          </div>
+        </div>
+
+        {/* --- Mark All Read Button (Conditional) --- */}
+        {unreadCount > 0 && filter !== "unread" && (
+          <div className="flex justify-end">
+            <button
+              onClick={markAllAsRead}
+              className="text-sm font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Check size={16} /> Mark all as read
+            </button>
+          </div>
+        )}
+
+        {/* --- Notifications List --- */}
+        <div className="space-y-8">
+          {(
+            Object.entries(groupedNotifications) as [
+              keyof typeof groupedNotifications,
+              Notification[]
+            ][]
+          ).map(
+            ([group, items]) =>
+              items.length > 0 && (
+                <div key={group} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      {group}
+                    </span>
+                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    {items.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`
                         group relative flex flex-col sm:flex-row gap-4 p-5 rounded-xl border transition-all duration-300
                         ${notification.read
-                          ? "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800"
-                          : "bg-white dark:bg-slate-950 border-l-4 border-l-green-500 border-y-slate-200 border-r-slate-200 dark:border-y-slate-800 dark:border-r-slate-800 shadow-sm"
-                        }
+                            ? "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800"
+                            : "bg-white dark:bg-slate-950 border-l-4 border-l-green-500 border-y-slate-200 border-r-slate-200 dark:border-y-slate-800 dark:border-r-slate-800 shadow-sm"
+                          }
                         hover:shadow-md dark:hover:bg-slate-900
                       `}
-                    >
-                      {/* Icon */}
-                      <div
-                        className={`
+                      >
+                        {/* Icon */}
+                        <div
+                          className={`
                         shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-1
                         ${getStyles(notification.type)}
                       `}
-                      >
-                        {getIcon(notification.type)}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h3
-                              className={`text-base font-semibold ${notification.read
-                                ? "text-slate-600 dark:text-slate-400"
-                                : "text-slate-900 dark:text-white"
-                                }`}
-                            >
-                              {notification.title}
-                            </h3>
-                            <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                              {notification.message}
-                            </p>
-                          </div>
-
-                          {/* Actions (Desktop - Hover Only) */}
-                          <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {!notification.read && (
-                              <button
-                                onClick={() => markAsRead(notification.id)}
-                                className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all cursor-pointer"
-                                title="Mark as read"
-                              >
-                                <MailOpen size={18} />
-                              </button>
-                            )}
-                            <button
-                              onClick={() =>
-                                deleteNotification(notification.id)
-                              }
-                              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all cursor-pointer"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Footer Info */}
-                        <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={14} />
-                            <span>{notification.time}</span>
-                          </div>
-                          {!notification.read && (
-                            <span className="font-semibold text-green-600 dark:text-green-400">
-                              Unread
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions (Mobile - Always Visible Row) */}
-                      <div className="flex sm:hidden items-center justify-end gap-3 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                        {!notification.read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-green-600"
-                          >
-                            <MailOpen size={14} />
-                            Mark Read
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-red-500"
                         >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-        )}
+                          {getIcon(notification.type)}
+                        </div>
 
-        {/* --- Empty State --- */}
-        {filteredNotifications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
-            <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800/50 mb-4">
-              <Bell className="text-slate-300 dark:text-slate-600" size={48} />
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3
+                                className={`text-base font-semibold ${notification.read
+                                  ? "text-slate-600 dark:text-slate-400"
+                                  : "text-slate-900 dark:text-white"
+                                  }`}
+                              >
+                                {notification.title}
+                              </h3>
+                              <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                                {notification.message}
+                              </p>
+                            </div>
+
+                            {/* Actions (Desktop - Hover Only) */}
+                            <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {!notification.read && (
+                                <button
+                                  onClick={() => markAsRead(notification.id)}
+                                  className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all cursor-pointer"
+                                  title="Mark as read"
+                                >
+                                  <MailOpen size={18} />
+                                </button>
+                              )}
+                              <button
+                                onClick={() =>
+                                  deleteNotification(notification.id)
+                                }
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Footer Info */}
+                          <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
+                            <div className="flex items-center gap-1.5">
+                              <Clock size={14} />
+                              <span>{notification.time}</span>
+                            </div>
+                            {!notification.read && (
+                              <span className="font-semibold text-green-600 dark:text-green-400">
+                                Unread
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions (Mobile - Always Visible Row) */}
+                        <div className="flex sm:hidden items-center justify-end gap-3 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                          {!notification.read && (
+                            <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-green-600"
+                            >
+                              <MailOpen size={14} />
+                              Mark Read
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteNotification(notification.id)}
+                            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-red-500"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+          )}
+
+          {/* --- Empty State --- */}
+          {filteredNotifications.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
+              <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800/50 mb-4">
+                <Bell className="text-slate-300 dark:text-slate-600" size={48} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                No notifications
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1">
+                {filter === "unread"
+                  ? "You're all caught up! No unread alerts."
+                  : "You have no notifications at this time."}
+              </p>
+              {filter === "unread" && (
+                <button
+                  onClick={() => setFilter("all")}
+                  className="mt-4 text-sm font-medium text-green-600 hover:underline"
+                >
+                  View all notifications
+                </button>
+              )}
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              No notifications
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1">
-              {filter === "unread"
-                ? "You're all caught up! No unread alerts."
-                : "You have no notifications at this time."}
-            </p>
-            {filter === "unread" && (
-              <button
-                onClick={() => setFilter("all")}
-                className="mt-4 text-sm font-medium text-green-600 hover:underline"
-              >
-                View all notifications
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

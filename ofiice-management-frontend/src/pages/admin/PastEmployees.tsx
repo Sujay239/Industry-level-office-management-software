@@ -6,6 +6,16 @@ import { Search, Mail, Phone, MapPin, X, Eye, Calendar, Briefcase, Clock } from 
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PastEmployee {
     id: number;
@@ -26,7 +36,7 @@ interface PastEmployee {
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const PastEmployees: React.FC = () => {
-    const { showError } = useNotification();
+    const { showSuccess, showError } = useNotification();
     const [pastEmployees, setPastEmployees] = useState<PastEmployee[]>([]);
 
     const fetchPastEmployees = async () => {
@@ -74,6 +84,42 @@ const PastEmployees: React.FC = () => {
         setIsViewModalOpen(true);
     };
 
+    // -- Delete Confirmation --
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+    // We already have viewingEmployee, so we can use that for deletion context if the delete button is inside the modal.
+    // If we want to delete from the list directly, we might need a separate state or just set viewingEmployee.
+
+    const confirmDelete = () => {
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handlePermanentDelete = async () => {
+        if (!viewingEmployee) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/emp/permanentRemoveEmp/${viewingEmployee.id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || "Failed to delete employee");
+            }
+
+            // Success
+            setPastEmployees((prev) => prev.filter(emp => emp.id !== viewingEmployee.id));
+            setIsViewModalOpen(false);
+            setIsDeleteDialogOpen(false);
+            setViewingEmployee(null);
+            showSuccess("Employee record permanently deleted");
+        } catch (error: any) {
+            console.error(error);
+            showError(error.message || "Failed to delete employee");
+        }
+    };
+
     const calculateDuration = (start: string, end: string) => {
         const startDate = new Date(start);
         const endDate = new Date(end);
@@ -92,13 +138,13 @@ const PastEmployees: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-6 lg:p-10 animate-in fade-in duration-500">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-6 lg:p-10 animate-in fade-in duration-500">
             <div className="space-y-8">
 
                 {/* --- Header --- */}
-                <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 -mt-6 lg:-mt-6 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="lg:sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur support-[backdrop-filter]:bg-slate-50/50 py-4 -mx-6 px-6 lg:-mx-10 lg:px-10 border-b border-slate-200/50 dark:border-slate-800/50 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white max-sm:hidden">
                             Past Employees
                         </h1>
                         <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 mt-1">
@@ -140,7 +186,10 @@ const PastEmployees: React.FC = () => {
                                         <Calendar className="h-4 w-4 mr-3 text-slate-400" /> Left: {employee.departureDate}
                                     </div>
                                     <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                                        <Briefcase className="h-4 w-4 mr-3 text-slate-400" /> {employee.departureReason}
+                                        <Briefcase className="h-4 w-4 mr-3 text-slate-400 shrink-0" />
+                                        <span className="truncate" title={employee.departureReason}>
+                                            Reason: {employee.departureReason || "Not Specified"}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -168,7 +217,7 @@ const PastEmployees: React.FC = () => {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full cursor-pointer bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md"
+                                className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full cursor-pointer bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 backdrop-blur-md"
                                 onClick={() => setIsViewModalOpen(false)}
                             >
                                 <X className="h-4 w-4 text-slate-700 dark:text-slate-200" />
@@ -259,13 +308,29 @@ const PastEmployees: React.FC = () => {
                             <div className="mt-8">
                                 <Button
                                     variant="destructive"
-                                    className="w-full cursor-pointer opacity-90 hover:opacity-100"
+                                    className="w-full cursor-pointer opacity-90 hover:opacity-100 bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:text-white dark:hover:bg-red-700"
+                                    onClick={confirmDelete}
                                 >
                                     <X className="w-4 h-4 mr-2" /> Permanently Delete Record
                                 </Button>
                             </div>
                         </div>
                     </Card>
+
+                    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                        <AlertDialogContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-slate-900 dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+                                    This action cannot be undone. This will permanently delete <b>{viewingEmployee?.name}</b>'s record from the archives.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 cursor-pointer">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handlePermanentDelete} className="bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-700 border-none cursor-pointer">Delete Permanently</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             )}
         </div>
