@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import UserSidebar from "../components/UserSidebar";
 
-import { Menu, LayoutDashboard, CheckSquare, MessageSquare, Calendar, Settings } from "lucide-react";
+import {
+  Menu,
+  LayoutDashboard,
+  CheckSquare,
+  MessageSquare,
+  Calendar,
+  Settings,
+} from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 
 const UserLayout: React.FC = () => {
@@ -26,11 +33,11 @@ const UserLayout: React.FC = () => {
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/user', end: true },
-    { icon: CheckSquare, label: 'Tasks', path: '/user/tasks' },
-    { icon: MessageSquare, label: 'Chats', path: '/user/chats' },
-    { icon: Calendar, label: 'Meetings', path: '/user/meetings' },
-    { icon: Settings, label: 'Settings', path: '/user/settings' },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/user", end: true },
+    { icon: CheckSquare, label: "Tasks", path: "/user/tasks" },
+    { icon: MessageSquare, label: "Chats", path: "/user/chats" },
+    { icon: Calendar, label: "Meetings", path: "/user/meetings" },
+    { icon: Settings, label: "Settings", path: "/user/settings" },
   ];
 
   return (
@@ -39,11 +46,17 @@ const UserLayout: React.FC = () => {
       {showMobileHeader && (
         <header className="lg:hidden h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 z-40 relative">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-8 h-8 object-contain"
+            />
           </div>
 
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <span className="font-bold text-lg text-slate-800 dark:text-white truncate max-w-[150px]">{getPageTitle()}</span>
+            <span className="font-bold text-lg text-slate-800 dark:text-white truncate max-w-[150px]">
+              {getPageTitle()}
+            </span>
           </div>
 
           <button

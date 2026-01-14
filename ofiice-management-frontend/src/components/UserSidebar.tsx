@@ -12,7 +12,6 @@ import {
   LogIn,
   ChevronLeft,
   ChevronRight,
-  Menu,
   Sun,
   Moon,
   Timer,
@@ -179,7 +178,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({ mobileOpen, setMobileOpen }) 
       {/* --- Mobile Overlay --- */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden pointer-events-auto"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden pointer-events-auto"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -187,7 +186,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({ mobileOpen, setMobileOpen }) 
       {/* --- Main Sidebar --- */}
       <aside
         className={`
-          fixed lg:static top-0 left-0 z-[100] h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50
+          fixed lg:static top-0 left-0 z-50 h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50
           transition-all duration-300 ease-in-out flex flex-col
           ${isExpandedVisual ? "w-72" : "w-20"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
