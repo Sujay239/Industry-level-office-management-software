@@ -41,6 +41,9 @@ import { sendEmail } from "./utils/mailer.js";
 import { initScheduler } from './scheduler.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middlewares/errorHandler.js';
 
 
 // ===== FIX __dirname FOR ESM =====
@@ -51,6 +54,26 @@ const __dirname = dirname(__filename);
 const app = express();
 app.set('trust proxy', 1);
 const port = process.env.PORT || 5000;
+
+app.use(helmet());
+
+// ===== RATE LIMITING =====
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Strict limit for auth routes
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many login attempts, please try again later.'
+});
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -124,8 +147,8 @@ cron.schedule('0 0 26 * *', async () => {
 // ===== ROUTES =====
 
 // Auth
-app.use('/auth', authRoutes);
-app.use('/auth', forgotPasswordRoutes);
+app.use('/auth', authLimiter, authRoutes);
+app.use('/auth', authLimiter, forgotPasswordRoutes);
 
 // Super Admin
 app.use('/superadmin/departments', adminDepartments);
@@ -204,10 +227,44 @@ handleSocketConnection(io);
 initScheduler();
 
 
+// ===== GLOBAL ERROR HANDLER =====
+app.use(errorHandler);
+
+
 // ===== START SERVER =====
 if (process.env.NODE_ENV !== 'test') {
-  httpServer.listen(port, () => {
+  const server = httpServer.listen(port, () => {
     console.log(`Backend running on http://localhost:${port}`);
+  });
+
+  // Graceful Shutdown Logic
+  const shutdown = async () => {
+    console.log('Received shutdown signal. Closing server...');
+    server.close(async () => {
+      console.log('HTTP server closed.');
+      try {
+        await db.end(); // Close DB pool
+        console.log('Database connection closed.');
+        process.exit(0);
+      } catch (err) {
+        console.error('Error during database disconnection:', err);
+        process.exit(1);
+      }
+    });
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+
+  // Uncaught Exceptions & Rejections
+  process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION! Shutting down...', err);
+    process.exit(1); // Optional: depends on if you want to restart
+  });
+
+  process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION! Shutting down...', err);
+    process.exit(1);
   });
 }
 
