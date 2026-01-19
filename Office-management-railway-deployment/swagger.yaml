@@ -1,0 +1,2223 @@
+openapi: 3.0.0
+info:
+  title: Office Management API
+  version: 1.0.0
+  description: API documentation for the Office Management System Backend
+servers:
+  - url: http://localhost:3000
+    description: Local server
+  - url: https://office-management-sbuh.onrender.com
+    description: Production server (Render)
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: JWT token stored in a cookie
+security:
+  - cookieAuth: []
+paths:
+  /admin/attendance:
+    get:
+      summary: Get attendance data (Daily view or History view)
+      tags:
+        - Admin-Attendance
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: mode
+          required: true
+          schema:
+            type: string
+            enum:
+              - daily
+              - history
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: Required for daily mode (Format - YYYY-MM-DD)
+        - in: query
+          name: month
+          schema:
+            type: integer
+          description: Required for history mode (Format - MM)
+        - in: query
+          name: year
+          schema:
+            type: integer
+          description: Required for history mode (Format - YYYY)
+      responses:
+        "200":
+          description: Attendance data retrieved successfully
+        "400":
+          description: Missing required parameters or invalid mode
+        "500":
+          description: Server error
+  /admin/departments/getAll:
+    get:
+      summary: Get all departments with manager and staff count
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of departments
+        "500":
+          description: Server error
+  /admin/departments/get/{id}:
+    get:
+      summary: Get a single department with staff list
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department details with staff
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /admin/departments/add:
+    post:
+      summary: Create a new department
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                manager_id:
+                  type: integer
+      responses:
+        "210":
+          description: Department created successfully
+        "400":
+          description: Department name already exists
+        "500":
+          description: Server error
+  /admin/departments/update/{id}:
+    put:
+      summary: Update an existing department
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                manager_id:
+                  type: integer
+      responses:
+        "200":
+          description: Department updated successfully
+        "400":
+          description: Department name already taken
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /admin/departments/delete/{id}:
+    delete:
+      summary: Delete a department
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department deleted successfully
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /admin/departments/getPotentialManagers:
+    get:
+      summary: Get list of potential managers (admins and managers)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of potential managers
+        "500":
+          description: Server error
+  /admin/emp/addEmp:
+    post:
+      summary: Add a new employee
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - designation
+                - phone
+                - location
+                - joining_date
+                - salary
+                - skills
+                - employment_type
+                - role
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                designation:
+                  type: string
+                phone:
+                  type: string
+                location:
+                  type: string
+                joining_date:
+                  type: string
+                  format: date
+                salary:
+                  type: number
+                skills:
+                  type: array
+                  items:
+                    type: string
+                employment_type:
+                  type: string
+                department_id:
+                  type: integer
+                role:
+                  type: string
+      responses:
+        "200":
+          description: Employee added successfully
+        "400":
+          description: Validation error
+        "500":
+          description: Server error
+  /admin/emp/updateEmp/{id}:
+    put:
+      summary: Update an existing employee
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                designation:
+                  type: string
+                phone:
+                  type: string
+                location:
+                  type: string
+                joining_date:
+                  type: string
+                  format: date
+                salary:
+                  type: number
+                skills:
+                  type: array
+                  items:
+                    type: string
+                employment_type:
+                  type: string
+      responses:
+        "200":
+          description: Employee updated successfully
+        "404":
+          description: Employee not found
+        "500":
+          description: Server error
+  /admin/emp/all:
+    get:
+      summary: Get all active employees
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of active employees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+        "500":
+          description: Server error
+  /admin/emp/removeEmp/{id}:
+    post:
+      summary: Remove (archive) an employee
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+                - password
+              properties:
+                reason:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Employee removed successfully
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /admin/emp/allPastEmp:
+    get:
+      summary: Get all past (archived) employees
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of past employees
+        "500":
+          description: Server error
+  /admin/emp/permanentRemoveEmp/{id}:
+    delete:
+      summary: Permanently delete an employee from archive
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee deleted permanently
+        "500":
+          description: Server error
+  /admin/holidays/all:
+    get:
+      summary: Get all holidays
+      tags:
+        - Admin-Holidays
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of all holidays
+        "500":
+          description: Server error
+  /admin/holidays/add:
+    post:
+      summary: Add a new holiday
+      tags:
+        - Admin-Holidays
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - date
+                - type
+              properties:
+                name:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                type:
+                  type: string
+                  enum:
+                    - Public
+                    - Optional
+      responses:
+        "201":
+          description: Holiday added successfully
+        "400":
+          description: Missing required fields
+        "500":
+          description: Server error
+  /admin/holidays/update/{id}:
+    put:
+      summary: Update an existing holiday
+      tags:
+        - Admin-Holidays
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - date
+                - type
+              properties:
+                name:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                type:
+                  type: string
+      responses:
+        "200":
+          description: Holiday updated successfully
+        "404":
+          description: Holiday not found
+        "500":
+          description: Server error
+  /admin/holidays/remove/{id}:
+    delete:
+      summary: Remove a holiday
+      tags:
+        - Admin-Holidays
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Holiday removed successfully
+        "404":
+          description: Holiday not found
+        "500":
+          description: Server error
+  /admin/leaves/all:
+    get:
+      summary: Get all leave requests
+      tags:
+        - Admin-Leaves
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of leave requests
+        "500":
+          description: Server error
+  /admin/leaves/approve/{id}:
+    put:
+      summary: Approve a leave request
+      tags:
+        - Admin-Leaves
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leave approved successfully
+        "404":
+          description: Leave request not found
+        "500":
+          description: Server error
+  /admin/leaves/reject/{id}:
+    put:
+      summary: Reject a leave request
+      tags:
+        - Admin-Leaves
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leave rejected successfully
+        "404":
+          description: Leave request not found
+        "500":
+          description: Server error
+  /payroll/all:
+    get:
+      summary: Get all payroll records for employees
+      tags:
+        - Admin-Payroll
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of payroll records
+        "500":
+          description: Server error
+  /payroll/{month}:
+    get:
+      summary: Get payroll records for a specific month
+      tags:
+        - Admin-Payroll
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: month
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of payroll records for the month
+        "400":
+          description: Month and Year are required
+        "500":
+          description: Server error
+  /payroll/process/{id}:
+    patch:
+      summary: Mark a payroll record as processing
+      tags:
+        - Admin-Payroll
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payroll status updated to processing
+        "404":
+          description: Payroll record not found
+        "500":
+          description: Server error
+  /payroll/pay/{id}:
+    put:
+      summary: Mark a payroll record as paid and send email
+      tags:
+        - Admin-Payroll
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                basic_salary:
+                  type: number
+                allowances:
+                  type: number
+                deductions:
+                  type: number
+      responses:
+        "200":
+          description: Payroll record updated as paid
+        "404":
+          description: Payroll record not found
+        "500":
+          description: Server error
+  /admin/settings/updateAdmin:
+    post:
+      summary: Update administrator profile
+      tags:
+        - Admin-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                name:
+                  type: string
+                designation:
+                  type: string
+                phone:
+                  type: string
+                location:
+                  type: string
+                password:
+                  type: string
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Profile updated successfully
+        "401":
+          description: Incorrect password or unauthorized
+        "500":
+          description: Server error
+  /admin/settings/changePassword:
+    post:
+      summary: Change administrator password
+      tags:
+        - Admin-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password changed successfully
+        "401":
+          description: Incorrect current password
+        "500":
+          description: Server error
+  /admin/settings/enable-2fa:
+    post:
+      summary: Enable Two-Factor Authentication
+      tags:
+        - Admin-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pin
+              properties:
+                pin:
+                  type: string
+      responses:
+        "200":
+          description: 2FA enabled successfully
+        "500":
+          description: Server error
+  /admin/settings/disable-2fa:
+    post:
+      summary: Disable Two-Factor Authentication
+      tags:
+        - Admin-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pin
+              properties:
+                pin:
+                  type: string
+      responses:
+        "200":
+          description: 2FA disabled successfully
+        "400":
+          description: Invalid pin or 2FA not enabled
+        "500":
+          description: Server error
+  /admin/tasks/all:
+    get:
+      summary: Get all tasks with assignee details
+      tags:
+        - Admin-Tasks
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of all tasks
+        "500":
+          description: Server error
+  /admin/tasks/create:
+    post:
+      summary: Create and assign a new task
+      tags:
+        - Admin-Tasks
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - priority
+                - assigned_to
+              properties:
+                title:
+                  type: string
+                project:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                  enum:
+                    - Low
+                    - Medium
+                    - High
+                    - Urgent
+                due_date:
+                  type: string
+                  format: date
+                assigned_to:
+                  type: integer
+      responses:
+        "201":
+          description: Task created and notification sent
+        "400":
+          description: Missing required fields
+        "500":
+          description: Server error
+  /admin/tasks/{id}:
+    delete:
+      summary: Delete a task
+      tags:
+        - Admin-Tasks
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task deleted successfully
+        "500":
+          description: Server error
+    patch:
+      summary: Update an existing task
+      tags:
+        - Admin-Tasks
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                project:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - Pending
+                    - In Progress
+                    - Completed
+                due_date:
+                  type: string
+                  format: date
+                assigned_to:
+                  type: integer
+      responses:
+        "200":
+          description: Task updated successfully
+        "400":
+          description: No fields to update
+        "500":
+          description: Server error
+  /admin/announcements/send:
+    post:
+      summary: Broadcast an announcement via email
+      tags:
+        - Admin-Announcements
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subject
+                - message
+              properties:
+                subject:
+                  type: string
+                message:
+                  type: string
+                priority:
+                  type: string
+                  enum:
+                    - Low
+                    - Normal
+                    - High
+      responses:
+        "200":
+          description: Announcement broadcast completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  stats:
+                    type: object
+                    properties:
+                      sent:
+                        type: integer
+                      failed:
+                        type: integer
+        "400":
+          description: Missing subject or message
+        "404":
+          description: No active employees found
+        "500":
+          description: Server error
+  /admin/dashboard/stats:
+    get:
+      summary: Get administrative dashboard statistics
+      tags:
+        - Admin-Dashboard
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: >-
+            Dashboard statistics including staff growth, payroll cost, and
+            attendance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_employees:
+                    type: integer
+                  employee_growth:
+                    type: string
+                  payroll_cost:
+                    type: number
+                  attendance_percentage:
+                    type: number
+                  attendance_change:
+                    type: number
+                  payroll_history:
+                    type: array
+                    items:
+                      type: object
+                  pending_leaves:
+                    type: array
+                    items:
+                      type: object
+                  upcoming_holidays:
+                    type: array
+                    items:
+                      type: object
+        "500":
+          description: Server error
+  /api/admins/addAdmin:
+    post:
+      summary: Add a new administrator
+      tags:
+        - Admin-Management
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: Admin created successfully
+        "400":
+          description: Validation error
+        "409":
+          description: Email already exists
+        "500":
+          description: Server error
+  /api/admins/getAdmins:
+    get:
+      summary: Get all administrators
+      tags:
+        - Admin-Management
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of admins
+        "404":
+          description: No admins found
+        "500":
+          description: Server error
+  /api/admins/removeAdmin/{id}:
+    delete:
+      summary: Remove an administrator
+      tags:
+        - Admin-Management
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Admin removed successfully
+        "404":
+          description: Admin not found
+        "500":
+          description: Server error
+  /api/admins/updateAdmin/{id}:
+    put:
+      summary: Update an administrator
+      tags:
+        - Admin-Management
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Admin updated successfully
+        "404":
+          description: Admin not found
+        "500":
+          description: Server error
+  /api/ips/:
+    get:
+      summary: Get all allowed IP addresses
+      tags:
+        - Admin-IP-Management
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of allowed IPs
+        "500":
+          description: Server error
+  /api/ips/add:
+    post:
+      summary: Add a new allowed IP address
+      tags:
+        - Admin-IP-Management
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ip_address
+              properties:
+                ip_address:
+                  type: string
+                label:
+                  type: string
+      responses:
+        "201":
+          description: IP added successfully
+        "400":
+          description: IP address is required
+        "409":
+          description: IP already exists
+        "500":
+          description: Server error
+  /api/ips/{id}:
+    delete:
+      summary: Remove an allowed IP address
+      tags:
+        - Admin-IP-Management
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: IP removed successfully
+        "404":
+          description: IP not found
+        "500":
+          description: Server error
+  /admin/meetings/create:
+    post:
+      summary: Schedule a new meeting
+      tags:
+        - Admin-Meetings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - start_time
+                - end_time
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+                join_url:
+                  type: string
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "201":
+          description: Meeting scheduled successfully
+        "400":
+          description: Missing required fields
+        "500":
+          description: Server error
+  /admin/meetings/all:
+    get:
+      summary: Get all meetings
+      tags:
+        - Admin-Meetings
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of all meetings
+        "500":
+          description: Server error
+  /admin/meetings/{id}:
+    delete:
+      summary: Cancel/Delete a meeting
+      tags:
+        - Admin-Meetings
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting cancelled successfully
+        "500":
+          description: Server error
+    put:
+      summary: Update an existing meeting
+      tags:
+        - Admin-Meetings
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - start_time
+                - end_time
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+                join_url:
+                  type: string
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Meeting updated successfully
+        "404":
+          description: Meeting not found
+        "500":
+          description: Server error
+  /admin/notifications/send:
+    post:
+      summary: Send in-app notifications to employees
+      tags:
+        - Admin-Notifications
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - message
+              properties:
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+                title:
+                  type: string
+                message:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - info
+                    - warning
+                    - achievement
+                send_to_all:
+                  type: boolean
+      responses:
+        "200":
+          description: Notifications sent successfully
+        "400":
+          description: Missing required fields or no users selected
+        "500":
+          description: Server error
+  /auth/login:
+    post:
+      summary: User login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                forceLogout:
+                  type: boolean
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Server error
+  /auth/forgot-password:
+    post:
+      summary: Request a password reset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Password reset email sent
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+  /auth/reset-password:
+    post:
+      summary: Reset password using token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Password reset successfully
+        "400":
+          description: Invalid or expired token
+        "500":
+          description: Internal server error
+  /auth/me:
+    get:
+      summary: Get currently logged in user info (from token)
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Decoded user info
+        "401":
+          description: Not authenticated or invalid token
+  /auth/myData:
+    get:
+      summary: Get current user full profile from DB
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Full user profile
+        "401":
+          description: Not authenticated or invalid token
+  /auth/logout:
+    post:
+      summary: Logout user and clear session
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Logout successful
+        "500":
+          description: Server error
+  /auth/2fa:
+    get:
+      summary: Check if 2FA is enabled for the current user
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: 2FA status
+  /auth/authorized-2fa:
+    post:
+      summary: Verify 2FA code during login
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: 2FA verification successful
+        "401":
+          description: Invalid 2FA code or unauthorized
+        "500":
+          description: Server error
+  /auth/verify-password:
+    post:
+      summary: Verify current user password
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Password verified
+        "401":
+          description: Invalid password or unauthorized
+        "500":
+          description: Server error
+  /api/chats:
+    get:
+      summary: Get all chats (DMs and Groups) for the current user
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of chats
+        "401":
+          description: Unauthorized
+  /api/chats/{chatId}/messages:
+    get:
+      summary: Get messages for a specific chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: cursor
+          schema:
+            type: string
+          description: Cursor for pagination (message created_at)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of messages with next cursor
+        "401":
+          description: Unauthorized
+  /api/chats/dm:
+    post:
+      summary: Get or create a direct chat with another user
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+      responses:
+        "200":
+          description: Chat object
+        "401":
+          description: Unauthorized
+  /api/chats/users:
+    get:
+      summary: Get list of users to start a chat with
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of users
+        "401":
+          description: Unauthorized
+  /api/chats/create:
+    post:
+      summary: Create a new group chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - memberIds
+              properties:
+                name:
+                  type: string
+                memberIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "201":
+          description: Group chat created
+        "401":
+          description: Unauthorized
+  /api/chats/mark-read:
+    post:
+      summary: Mark all messages in a chat as read
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chatId
+              properties:
+                chatId:
+                  type: integer
+      responses:
+        "200":
+          description: Messages marked as read
+        "401":
+          description: Unauthorized
+  /api/chats/{chatId}/add-members:
+    post:
+      summary: Add members to a group chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userIds
+              properties:
+                userIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Members added
+        "403":
+          description: Not an admin or not a group
+  /api/chats/{chatId}/make-admin:
+    post:
+      summary: Promote a member to admin in a group chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+      responses:
+        "200":
+          description: Member promoted to admin
+        "403":
+          description: Not an admin or not a group
+  /api/chats/{chatId}/remove-member:
+    post:
+      summary: Remove a member from a group chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+      responses:
+        "200":
+          description: Member removed
+        "403":
+          description: Not an admin or not a group
+  /api/chats/{chatId}/leave:
+    post:
+      summary: Leave a group chat
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Left group chat
+        "400":
+          description: Not a group or not a member
+  /employee/attendance/history:
+    get:
+      summary: Get personal attendance history and monthly statistics
+      tags:
+        - Employee-Attendance
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: >-
+            Attendance history and monthly stats (total days, present days, late
+            arrivals, leaves)
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /employee/dashboard/stats:
+    get:
+      summary: Get employee personal dashboard statistics
+      tags:
+        - Employee-Dashboard
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Dashboard data including tasks, attendance, and today's schedule
+        "500":
+          description: Server error
+  /employee/dashboard/clock-in:
+    post:
+      summary: Clock-in for the day
+      tags:
+        - Employee-Dashboard
+      security:
+        - cookieAuth: []
+      responses:
+        "201":
+          description: Clock-in successful
+        "403":
+          description: IP not authorized
+        "409":
+          description: Already clocked in
+        "500":
+          description: Server error
+  /employee/dashboard/clock-out:
+    post:
+      summary: Clock-out for the day
+      tags:
+        - Employee-Dashboard
+      security:
+        - cookieAuth: []
+      responses:
+        "201":
+          description: Clock-out successful
+        "404":
+          description: No clock-in record found
+        "409":
+          description: Already clocked out
+        "500":
+          description: Server error
+  /employee/dashboard/meetings:
+    get:
+      summary: Get all meetings assigned to the employee
+      tags:
+        - Employee-Dashboard
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of meetings
+        "500":
+          description: Server error
+  /employee/leaves/apply:
+    post:
+      summary: Apply for a new leave
+      tags:
+        - Employee-Leaves
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - start_date
+                - end_date
+                - reason
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - Sick
+                    - Casual
+                    - Privilege
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                reason:
+                  type: string
+      responses:
+        "201":
+          description: Leave application submitted successfully
+        "400":
+          description: Missing required fields or invalid leave type
+        "409":
+          description: Leave request already exists for these dates
+        "500":
+          description: Server error
+  /employee/leaves/summary:
+    get:
+      summary: Get leave entitlement summary and balance
+      tags:
+        - Employee-Leaves
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of leave types with used and available balances
+        "500":
+          description: Server error
+  /employee/leaves/all:
+    get:
+      summary: Get all leave applications for the current employee
+      tags:
+        - Employee-Leaves
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of all leaves
+        "500":
+          description: Server error
+  /employee/notifications/all:
+    get:
+      summary: Get all notifications for the current employee
+      tags:
+        - Employee-Notifications
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of notifications
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /employee/notifications/mark-read/all:
+    patch:
+      summary: Mark all notifications as read
+      tags:
+        - Employee-Notifications
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: All notifications marked as read
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /employee/notifications/mark-read/{id}:
+    patch:
+      summary: Mark a specific notification as read
+      tags:
+        - Employee-Notifications
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification marked as read
+        "401":
+          description: Unauthorized
+        "404":
+          description: Notification not found
+        "500":
+          description: Server error
+  /employee/notifications/delete/{id}:
+    delete:
+      summary: Delete a specific notification
+      tags:
+        - Employee-Notifications
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification deleted successfully
+        "401":
+          description: Unauthorized
+        "404":
+          description: Notification not found
+        "500":
+          description: Server error
+  /employee/payroll/history:
+    get:
+      summary: Get personal payroll history and statistics
+      tags:
+        - Employee-Payroll
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Payroll history and YTD stats
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /settings/change-password:
+    post:
+      summary: Change employee password
+      tags:
+        - Employee-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oldPassword
+                - newPassword
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password updated successfully
+        "401":
+          description: Incorrect current password or unauthenticated
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+  /settings/updateProfile:
+    put:
+      summary: Update employee profile details
+      tags:
+        - Employee-Settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                location:
+                  type: string
+                bio:
+                  type: string
+                avatar:
+                  type: string
+                designation:
+                  type: string
+      responses:
+        "200":
+          description: Profile updated successfully
+        "401":
+          description: Not authenticated
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+  /employee/tasks/all:
+    get:
+      summary: Get all tasks assigned to the current employee
+      tags:
+        - Employee-Tasks
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of assigned tasks
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /employee/tasks/update/processing/{id}:
+    patch:
+      summary: Mark a task as In Progress
+      tags:
+        - Employee-Tasks
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task updated successfully
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /employee/tasks/update/completed/{id}:
+    patch:
+      summary: Mark a task as Completed
+      tags:
+        - Employee-Tasks
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task updated successfully
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /admin/emp/all/meetings:
+    get:
+      summary: Get all employees for meeting scheduling (including departments)
+      tags:
+        - Admin-Employees
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of employees with department names
+        "500":
+          description: Server error
+  /superadmin/departments/getAll:
+    get:
+      summary: Get all departments with manager and staff count (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of departments
+        "500":
+          description: Server error
+  /superadmin/departments/get/{id}:
+    get:
+      summary: Get a single department with staff list (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department details with staff
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /superadmin/departments/add:
+    post:
+      summary: Create a new department (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                manager_id:
+                  type: integer
+      responses:
+        "210":
+          description: Department created successfully
+        "400":
+          description: Department name already exists
+        "500":
+          description: Server error
+  /superadmin/departments/update/{id}:
+    put:
+      summary: Update an existing department (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                manager_id:
+                  type: integer
+      responses:
+        "200":
+          description: Department updated successfully
+        "400":
+          description: Department name already taken
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /superadmin/departments/delete/{id}:
+    delete:
+      summary: Delete a department (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department deleted successfully
+        "404":
+          description: Department not found
+        "500":
+          description: Server error
+  /superadmin/departments/getPotentialManagers:
+    get:
+      summary: Get list of potential managers (Super Admin)
+      tags:
+        - Admin-Departments
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of potential managers
+        "500":
+          description: Server error
+  /superadmin/audit-logs:
+    get:
+      summary: Get paginated system audit logs
+      tags:
+        - Superadmin-Logs
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 15
+      responses:
+        "200":
+          description: List of audit logs with pagination details
+        "403":
+          description: Access denied. Super Admin only.
+        "500":
+          description: Server error
+tags:
+  - name: Admin-Attendance
+    description: Attendance tracking and history for administrators
+  - name: Admin-Departments
+    description: Department management and organization structure
+  - name: Admin-Employees
+    description: Employee management for administrators
+  - name: Admin-Holidays
+    description: Holiday management for the organization
+  - name: Admin-Leaves
+    description: Leave request management for administrators
+  - name: Admin-Payroll
+    description: Payroll management for administrators
+  - name: Admin-Settings
+    description: Administrator profile and security settings
+  - name: Admin-Tasks
+    description: Task management and assignment for administrators
+  - name: Admin-Announcements
+    description: Broadcast announcements to employees
+  - name: Admin-Dashboard
+    description: Administrative dashboard statistics and metrics
+  - name: Admin-Management
+    description: Administrator management (Super Admin only)
+  - name: Admin-IP-Management
+    description: Manage allowed IP addresses for system access
+  - name: Admin-Meetings
+    description: Meeting scheduling and management for administrators
+  - name: Admin-Notifications
+    description: In-app notification management
+  - name: Chat
+    description: Internal messaging system (DMs and Groups)
+  - name: Employee-Attendance
+    description: Personal attendance history and statistics for employees
+  - name: Employee-Dashboard
+    description: Personal dashboard and attendance for employees
+  - name: Employee-Leaves
+    description: Leave application and history for employees
+  - name: Employee-Notifications
+    description: In-app notifications for employees
+  - name: Employee-Payroll
+    description: Personal payroll history and statistics for employees
+  - name: Employee-Settings
+    description: Personal profile and security settings for employees
+  - name: Employee-Tasks
+    description: Task management and tracking for employees
+  - name: Superadmin-Logs
+    description: System-wide audit logging for super administrators

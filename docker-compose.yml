@@ -13,7 +13,7 @@ services:
       TZ: Asia/Kolkata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./Office-management-railway-deployment/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   postgres_data:
