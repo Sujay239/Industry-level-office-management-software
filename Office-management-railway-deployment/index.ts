@@ -49,6 +49,7 @@ const __dirname = dirname(__filename);
 
 // ===== APP SETUP =====
 const app = express();
+app.set('trust proxy', 1);
 const port = process.env.PORT || 5000;
 
 const allowedOrigins = [
@@ -175,8 +176,14 @@ app.get("/debug-mail", async (req, res) => {
   try {
     console.log("🚀 /debug-mail hit");
 
+    const toEmail = process.env.DEBUG_MAIL_TO;
+
+    if (!toEmail) {
+      return res.status(400).json({ error: "DEBUG_MAIL_TO environment variable is not set" });
+    }
+
     const info = await sendEmail({
-      to: "sujaykumarkotal49@gmail.com",
+      to: toEmail,
       subject: "Brevo SMTP Test",
       text: "If you received this, Brevo SMTP is working correctly.",
     });
@@ -198,6 +205,10 @@ initScheduler();
 
 
 // ===== START SERVER =====
-httpServer.listen(port, () => {
-  console.log(`Backend running on http://localhost:${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  httpServer.listen(port, () => {
+    console.log(`Backend running on http://localhost:${port}`);
+  });
+}
+
+export default app;
