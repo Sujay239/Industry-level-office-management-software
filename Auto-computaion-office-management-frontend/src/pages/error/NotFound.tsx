@@ -47,7 +47,7 @@ const NotFound: React.FC = () => {
                 className="relative z-10 w-full max-w-xl group"
             >
                 {/* Decorative Borders & Glows */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-[2.5rem] blur-2xl group-hover:opacity-100 opacity-50 transition duration-1000" />
+                <div className="absolute -inset-1 bg-linear-to-r from-cyan-500/20 to-purple-500/20 rounded-[2.5rem] blur-2xl group-hover:opacity-100 opacity-50 transition duration-1000" />
 
                 <div className="relative bg-slate-900/80 backdrop-blur-3xl border border-slate-800 rounded-[2rem] p-8 md:p-12 overflow-hidden">
 
@@ -56,7 +56,7 @@ const NotFound: React.FC = () => {
                         <motion.div
                             animate={{ translateY: ['-100%', '100%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="w-full h-20 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent"
+                            className="w-full h-20 bg-linear-to-b from-transparent via-cyan-500/5 to-transparent"
                         />
                     </div>
 

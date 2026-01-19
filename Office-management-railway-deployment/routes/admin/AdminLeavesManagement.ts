@@ -84,8 +84,6 @@ router.put(
         req
       );
 
-      // 2. Insert/Update Attendance Records for the date range
-      // We use generate_series to create the dates and ON CONFLICT to update if exists
       const attendanceQuery = `
             INSERT INTO attendance (user_id, date, status)
             SELECT $1, d::date, 'On Leave'

@@ -54,7 +54,6 @@ const port = process.env.PORT || 5000;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
-  "https://office-management-sbuh.onrender.com",
   "https://localhost",
   "http://localhost",
   "capacitor://localhost"

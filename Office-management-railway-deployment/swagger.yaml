@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: Office Management API
-  version: 1.0.0
+  title: Auto Computation Office Management API
+  version: 3.0.0
   description: API documentation for the Office Management System Backend
 servers:
   - url: http://localhost:3000

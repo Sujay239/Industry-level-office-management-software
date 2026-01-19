@@ -136,10 +136,7 @@ router.delete('/delete/:id', authenticateToken, isSuperAdmin, enforce2FA, async 
     try {
         await client.query('BEGIN');
 
-        // Check if users are assigned (optional: prevent delete? or allow CASCADE/SET NULL)
-        // Schema constraints set manager_id to NULL on delete.
-        // But Users.department_id is ON DELETE SET NULL as well.
-        // So safe to delete.
+
 
         const result = await client.query('DELETE FROM departments WHERE id = $1 RETURNING *', [id]);
 
@@ -159,8 +156,6 @@ router.delete('/delete/:id', authenticateToken, isSuperAdmin, enforce2FA, async 
     }
 });
 
-
-// Get potential managers (admins + managers)
 router.get('/getPotentialManagers', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
     try {
         const query = `

@@ -9,7 +9,15 @@ const router = express.Router();
 
 router.post("/forgot-password", async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    if(email) {
+      email = email.toLowerCase();
+    }
+
     const BASE_URL = process.env.CLIENT_URL;
     const user = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
@@ -17,7 +25,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     if (user.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
-    const token = crypto.randomInt(100000, 999999).toString();
+    const token = crypto.randomUUID();
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
     await pool.query(

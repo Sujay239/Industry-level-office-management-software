@@ -5,10 +5,15 @@ import generateToken from '../../utils/generateToken.js';
 import decodeToken from '../../utils/decodeToken.js';
 import { authenticateToken } from '../../middlewares/authenticateToken.js';
 import isAdmin from '../../middlewares/isAdmin.js';
+import crypto from 'crypto';
 const router = express.Router();
 
 router.post('/login', async (req: Request, res: Response) => {
-    const { email, password, forceLogout } = req.body;
+    let { email, password, forceLogout } = req.body;
+
+    if(email) {
+        email = email.toLowerCase();
+    }
 
     try {
         const result = await pool.query(
@@ -26,7 +31,6 @@ router.post('/login', async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // --- Session Logic ---
         let sessionId = null;
 
         // Strict Single Session Check for Admin/Super Admin
@@ -40,14 +44,11 @@ router.post('/login', async (req: Request, res: Response) => {
         }
 
         // Generate new session ID for EVERYONE
-        const crypto = await import('crypto');
         sessionId = crypto.randomUUID();
 
         // Save to DB
         await pool.query('UPDATE users SET current_session_id = $1, last_login = CURRENT_TIMESTAMP WHERE id = $2', [sessionId, user.id]);
 
-        // If 2FA is enabled, they are NOT verified yet.
-        // If 2FA is disabled, they are automatically verified.
         const is2FAVerified = !user.two_factor_enabled;
         const token = await generateToken(user.id, user.email, user.role, is2FAVerified, sessionId);
 
@@ -69,13 +70,11 @@ router.post('/login', async (req: Request, res: Response) => {
 
 router.get('/2fa', authenticateToken, isAdmin, async (req: Request, res: Response) => {
     const token = req.cookies?.token;
-    if (!token) {
-        return res.status(401).json({ message: 'Not authenticated' });
-    }
+
     try {
         const decoded: any = await decodeToken(token);
         const id = decoded.id;
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+        const result = await pool.query('SELECT two_factor_enabled FROM users WHERE id = $1', [id]);
         res.json({ twoFactorEnabled: result.rows[0].two_factor_enabled });
     } catch (error) {
         return res.status(401).json({ message: 'Invalid token' });
@@ -92,9 +91,6 @@ router.post('/authorized-2fa', authenticateToken, isAdmin, async (req: Request, 
 
     try {
         const token = req.cookies?.token;
-        if (!token) {
-            return res.status(401).json({ message: 'Not authenticated' });
-        }
         const decoded: any = await decodeToken(token);
         const id = decoded.id;
         const result = await pool.query(
@@ -107,7 +103,6 @@ router.post('/authorized-2fa', authenticateToken, isAdmin, async (req: Request, 
         }
 
         const user = result.rows[0];
-        // FIX: Compare 2FA code with two_factor_secret, NOT password_hash
         const isMatch = await matchPassword(code, user.two_factor_secret);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid 2FA code' });
@@ -143,16 +138,15 @@ router.post('/authorized-2fa', authenticateToken, isAdmin, async (req: Request, 
 
 
 
-router.post('/logout', async (req: Request, res: Response) => {
+router.post('/logout',authenticateToken, async (req: Request, res: Response) => {
     try {
         const token = req.cookies?.token;
-        if (token) {
+
             const decoded: any = await decodeToken(token);
             if (decoded && decoded.id) {
-                // Clear session in DB
                 await pool.query('UPDATE users SET current_session_id = NULL WHERE id = $1', [decoded.id]);
             }
-        }
+
 
         res.clearCookie('token', {
             httpOnly: true,
@@ -170,11 +164,8 @@ router.post('/logout', async (req: Request, res: Response) => {
 
 
 
-router.get('/me', async (req: Request, res: Response) => {
+router.get('/me',authenticateToken, async (req: Request, res: Response) => {
     const token = req.cookies.token;
-    if (!token) {
-        return res.status(401).json({ message: 'Not authenticated' });
-    }
     try {
         const decoded = await decodeToken(token);
         res.json({ user: decoded });
@@ -186,13 +177,35 @@ router.get('/me', async (req: Request, res: Response) => {
 
 router.get('/myData', authenticateToken, async (req: Request, res: Response) => {
     const token = req.cookies?.token;
-    if (!token) {
-        return res.status(401).json({ message: 'Not authenticated' });
-    }
+
     try {
         const decoded: any = await decodeToken(token);
         const id = decoded.id;
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (!id) {
+            return res.status(401).json({ message: 'Not authenticated' });
+        }
+        const result = await pool.query(`SELECT
+            id,
+            department_id,
+            name,
+            email,
+            role,
+            designation,
+            status,
+            phone,
+            location,
+            bio,
+            joining_date,
+            salary,
+            skills,
+            employment_type,
+            avatar_url,
+            two_factor_enabled,
+            last_login,
+            created_at,
+            updated_at,
+            current_session_id
+        FROM users WHERE id = $1`, [id]);
         res.json({ user: result.rows[0] });
     } catch (error) {
         return res.status(401).json({ message: 'Invalid token' });
@@ -203,17 +216,6 @@ router.get('/myData', authenticateToken, async (req: Request, res: Response) => 
 
 router.post('/verify-password', authenticateToken, async (req: Request, res: Response) => {
     const { password } = req.body;
-    // req.user is populated by authenticateToken, but we need to fetch the full user for the password hash
-    // authenticateToken puts decoded token in req.user, usually { id, email, role }
-
-    // We need to type-cast or use the decoded info. standard authenticateToken middleware attaches to req.user
-    // Looking at other routes, they use decodeToken manually or rely on cookie.
-    // But authenticateToken is middleware. Let's see how it's used in 'myData'.
-    // 'myData' manually decodes token again? No, let's look at line 152.
-    // It manually uses decodeToken.
-    // Let's stick to the pattern used in the file for consistency, or use the middleware properly if it's set up.
-    // Line 152: router.get('/myData', authenticateToken, ...) but then it grabs token from cookie again?
-    // That's redundant but confirms the pattern.
 
     try {
         const token = req.cookies?.token;

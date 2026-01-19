@@ -16,13 +16,7 @@ router.get('/all', authenticateToken, isEmployee, async (req: Request, res: Resp
         const decoded: any = await decodeToken(token);
         const userId = decoded.id;
         if (!userId) return res.sendStatus(401);
-
-        // Added ORDER BY to show newest first
-        const queryText = `
-            SELECT * FROM notifications
-            WHERE user_id = $1
-            ORDER BY created_at DESC
-        `;
+        const queryText = `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC`;
 
         const notifications = await pool.query(queryText, [userId]);
         res.json({ Notifications: notifications.rows });

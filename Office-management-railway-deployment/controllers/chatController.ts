@@ -129,7 +129,9 @@ export const getChats = async (req: Request, res: Response) => {
 
 export const getMessages = async (req: Request, res: Response) => {
   const chatId = req.params.chatId;
-  const userId = (req as any).user.id;
+  const token = req.cookies.token;
+  const data: any = await decodeToken(token);
+  const userId = data.userId;
   const cursor = req.query.cursor ? parseInt(req.query.cursor as string) : null;
   const limitCount = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
@@ -219,7 +221,9 @@ export const getMessages = async (req: Request, res: Response) => {
 
 // Check if a direct chat exists between two users, if not create it
 export const getOrCreateDirectChat = async (req: Request, res: Response) => {
-  const userId = (req as any).user.id;
+  const token = req.cookies.token;
+  const data: any = await decodeToken(token);
+  const userId = data.userId;
   const { targetUserId } = req.body;
 
   try {

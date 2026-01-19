@@ -19,12 +19,12 @@ router.get('/history', authenticateToken, isEmployee, async (req: AuthenticatedR
         const userId = req.user?.id;
         if (!userId) return res.sendStatus(401);
 
-        // Get current month stats range
+
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-        // 1. Fetch History (Limit 50 descending)
+        // (Limit 50 descending)
         const historyQuery = `
             SELECT id, to_char(date, 'YYYY-MM-DD') as date_str, status, check_in_time, check_out_time
             FROM attendance
@@ -46,7 +46,6 @@ router.get('/history', authenticateToken, isEmployee, async (req: AuthenticatedR
         const statsRes = await pool.query(statsQuery, [userId, startOfMonth, endOfMonth]);
         const stats = statsRes.rows[0];
 
-        // 3. Leaves Logic (Current Month Approved Leaves)
         const leavesQuery = `
             SELECT COUNT(*) as leaves_taken
             FROM leaves
@@ -59,15 +58,15 @@ router.get('/history', authenticateToken, isEmployee, async (req: AuthenticatedR
 
 
         // --- Helper Functions ---
-        const formatTime12h = (timeStr: string | null) => {
-            if (!timeStr) return "--";
-            // Check if it's "HH:MM:SS"
-            const [h, m] = timeStr.split(':').map(Number);
-            if (isNaN(h)) return timeStr; // Fallback
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            const h12 = h % 12 || 12;
-            return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
-        };
+        // const formatTime12h = (timeStr: string | null) => {
+        //     if (!timeStr) return "--";
+        //     // Check if it's "HH:MM:SS"
+        //     const [h, m] = timeStr.split(':').map(Number);
+        //     if (isNaN(h)) return timeStr; // Fallback
+        //     const ampm = h >= 12 ? 'PM' : 'AM';
+        //     const h12 = h % 12 || 12;
+        //     return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
+        // };
 
         const calculateTotalHours = (startStr: string | null, endStr: string | null) => {
             if (!startStr || !endStr) return "0h 00m";
@@ -82,24 +81,19 @@ router.get('/history', authenticateToken, isEmployee, async (req: AuthenticatedR
             return `${h}h ${m.toString().padStart(2, '0')}m`;
         };
 
-        const formatDateStr = (dateObj: Date) => {
-            // Ensure YYYY-MM-DD format from Date object
-            return dateObj.toISOString().split('T')[0];
-        };
+        // const formatDateStr = (dateObj: Date) => {
+        //     // Ensure YYYY-MM-DD format from Date object
+        //     return dateObj.toISOString().split('T')[0];
+        // };
 
 
         const history = historyRes.rows.map(row => {
             let displayStatus = row.status;
-
-            // Derive "Late" status if Present but checked in after 9:15
-            if (row.status === 'Present' && row.check_in_time > '09:15:00') {
+            if (row.status === 'Present' && row.check_in_time > '05:00:00') {
                 displayStatus = 'Late';
             }
-
-            // Use the string directly from DB to avoid timezone shifts
             const dateStr = row.date_str;
 
-            // Treat as UTC (Appends Z) so frontend converts to Local
             const checkInISO = row.check_in_time ? `${dateStr}T${row.check_in_time}Z` : null;
             const checkOutISO = row.check_out_time ? `${dateStr}T${row.check_out_time}Z` : null;
 

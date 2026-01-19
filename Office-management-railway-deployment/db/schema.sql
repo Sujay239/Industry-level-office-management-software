@@ -22,7 +22,7 @@ CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    manager_id INT, -- FK added later to avoid circular dependency
+    manager_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -255,7 +255,7 @@ CREATE TABLE past_employees (
     exit_date DATE,
     reason_for_exit TEXT,
     exit_interview_notes TEXT,
-    removed_by_admin_id INT REFERENCES users(id) -- HR/Admin who archived
+    removed_by_admin_id INT REFERENCES users(id)
 );
 
 CREATE TABLE allowed_ips (

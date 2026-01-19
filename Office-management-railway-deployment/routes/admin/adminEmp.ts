@@ -313,9 +313,6 @@ router.put(
 
       await client.query("COMMIT");
 
-      // Auto-assign Manager Logic (Outside transaction or inside? Inside is better for consistency but department update is separate concern)
-      // Actually, let's do it separately or inside. If inside, we need to be careful.
-      // Let's do it inside before COMMIT.
       const updatedUserData = updatedUser.rows[0];
       if (role === "manager" && department_id) {
         const deptCheck = await pool.query("SELECT manager_id FROM departments WHERE id = $1", [department_id]);
@@ -323,14 +320,6 @@ router.put(
           await pool.query("UPDATE departments SET manager_id = $1 WHERE id = $2", [updatedUserData.id, department_id]);
         }
       }
-      // Wait, I mixed pool and client. If I use pool here, it's outside the transaction 'client'.
-      // But I am committing right above.
-      // Let's rewrite:
-      /*
-        await client.query("COMMIT");
-        if (role === "manager" ...) { use pool }
-      */
-      // This is fine. The user update is committed. The department update follows.
 
       res.json({
         message: "Employee updated successfully",
@@ -437,9 +426,6 @@ router.post(
       }
 
       const user = userRes.rows[0];
-
-      // 4. Insert into History (past_employees)
-      // Note: We map user.id to original_user_id to keep a reference
       const insertQuery = `
       INSERT INTO past_employees
       (original_user_id, name, email, designation, phone, location, joining_date, skills, employment_type, reason_for_exit, removed_by_admin_id, exit_date)
@@ -461,18 +447,11 @@ router.post(
         new Date()
       ]);
 
-      // 4.5 Clean up Chat Data (Explicitly requested)
-      // Delete messages sent by user
       await client.query("DELETE FROM messages WHERE sender_id = $1", [id]);
-      // Remove user from chat groups
       await client.query("DELETE FROM chat_members WHERE user_id = $1", [id]);
-      // Delete chats created by user
       await client.query("DELETE FROM chats WHERE created_by = $1", [id]);
-
-      // 5. Delete from users table
       await client.query("DELETE FROM users WHERE id = $1", [id]);
 
-      // 6. Commit the changes (Save everything)
       await client.query("COMMIT");
 
       res.json({
@@ -484,7 +463,7 @@ router.post(
         adminData.id,
         'EMPLOYEE_REMOVED',
         'users',
-        user.id, // Keep ID for reference
+        user.id,
         {
           name: user.name,
           reason: reason || "Not specified",
@@ -495,7 +474,6 @@ router.post(
 
 
     } catch (error) {
-      // 7. Rollback (Undo everything if ANY step failed)
       await client.query("ROLLBACK");
       console.error("Error performing transaction:", error);
       res

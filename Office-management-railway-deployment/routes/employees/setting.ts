@@ -16,22 +16,17 @@ router.post('/change-password', authenticateToken, async (req: Request, res: Res
         const decoded: any = await decodeToken(token);
         const id = decoded.id;
 
-        // Get current password hash
         const userResult = await pool.query('SELECT password_hash FROM users WHERE id = $1', [id]);
         if (userResult.rows.length === 0) return res.status(404).json({ message: "User not found" });
 
         const user = userResult.rows[0];
-
-        // Verify old password
         const isMatch = await matchPassword(oldPassword, user.password_hash);
         if (!isMatch) {
             return res.status(401).json({ message: "Incorrect current password" });
         }
 
-        // Hash new password
         const hashedPassword = await hashPassword(newPassword);
 
-        // Update password
         await pool.query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [hashedPassword, id]);
 
         await logAudit(id, 'PASSWORD_CHANGED', 'users', id, { event: 'Password changed successfully' }, req);
@@ -52,24 +47,7 @@ router.put('/updateProfile', authenticateToken, async (req: Request, res: Respon
         const id = decoded.id;
         const { name, phone, location, bio, avatar, designation } = req.body;
 
-        // Update user
-        // Note: avatar comes as base64 or url. If base64, we might want to save it or just store string.
-        // For now assuming it's a string (URL or Base64) and storing directly
-        // (Postgres TEXT can handle large strings, but better to upload.
-        // Frontend 'handleAvatarUpload' sends base64 currently).
-
-        const query = `
-            UPDATE users
-            SET name = COALESCE($1, name),
-                phone = COALESCE($2, phone),
-                location = COALESCE($3, location),
-                bio = COALESCE($4, bio),
-                avatar_url = COALESCE($5, avatar_url),
-                designation = COALESCE($6, designation),
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $7
-            RETURNING id, name, email, role, designation, phone, location, bio, avatar_url as avatar
-        `;
+        const query = `UPDATE users SET name = COALESCE($1, name), phone = COALESCE($2, phone), location = COALESCE($3, location), bio = COALESCE($4, bio), avatar_url = COALESCE($5, avatar_url), designation = COALESCE($6, designation), updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, name, email, role, designation, phone, location, bio, avatar_url as avatar`;
 
         const result = await pool.query(query, [name, phone, location, bio, avatar, designation, id]);
 

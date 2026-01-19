@@ -4,19 +4,15 @@ import { authenticateToken } from '../../middlewares/authenticateToken.js';
 import isAdmin from '../../middlewares/isAdmin.js';
 import { enforce2FA } from '../../middlewares/enforce2FA.js';
 import multer from 'multer';
-import path from 'path';
 import bcrypt from 'bcrypt';
 import decodeToken from '../../utils/decodeToken.js';
 
 const router = express.Router();
 
-// --- 1. Multer Configuration ---
 const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
-// --- 2. The Route ---
-// usage: upload.single('avatar') looks for a form-data field named "avatar"
 router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.single('avatar'), async (req: Request, res: Response) => {
     try {
         // Extract text fields
@@ -43,24 +39,19 @@ router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.singl
         const currentUser = userResult.rows[0];
 
         // 3. Verify Password (Security Check)
-        // We compare the plaintext password sent in body with the hash in DB
         const isMatch = await bcrypt.compare(password, currentUser.password_hash);
         if (!isMatch) {
             return res.status(401).json({ message: 'Incorrect password. Changes not saved.' });
         }
 
-        // 4. Handle Avatar Logic
-        let avatarUrl = currentUser.avatar_url; // Default to existing
+        let avatarUrl = currentUser.avatar_url;
 
         if (req.file) {
-            // Convert buffer to base64
             const b64 = req.file.buffer.toString('base64');
             const mimeType = req.file.mimetype;
             avatarUrl = `data:${mimeType};base64,${b64}`;
         }
 
-        // 5. Update Database
-        // We update name, designation, phone, location, and avatar_url
         const updateQuery = `
             UPDATE users
             SET name = $1, designation = $2, phone = $3, location = $4, avatar_url = $5, updated_at = CURRENT_TIMESTAMP
@@ -69,7 +60,7 @@ router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.singl
         `;
 
         const values = [
-            name || currentUser.name,               // Keep old value if new is undefined
+            name || currentUser.name,            
             designation || currentUser.designation,
             phone || currentUser.phone,
             location || currentUser.location,

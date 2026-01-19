@@ -66,8 +66,6 @@ router.post(
           failCount++;
         }
 
-        // ⚠️ Wait 200ms between emails to prevent rate-limiting/spam flags
-        // 5 employees = 1 second. 100 employees = 20 seconds.
         await delay(200);
       }
 
@@ -75,8 +73,6 @@ router.post(
         `Announcement sent. Success: ${successCount}, Failed: ${failCount}`
       );
 
-      // 3. Send Response WITH Stats
-      // This matches exactly what your frontend expects
       return res.status(200).json({
         message: "Announcement broadcast completed.",
         stats: {

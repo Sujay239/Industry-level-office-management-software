@@ -48,50 +48,21 @@ router.get(
           ? Math.round((daysPresent / daysInMonthSoFar) * 100)
           : 0;
 
-      // 1. Get Upcoming/Active Meetings (Limit 3)
-      const upcomingQuery = `
-            SELECT id, title, start_time, end_time, join_url, 'Meeting' as type
-            FROM meetings
-            WHERE $1 = ANY(user_id)
-            AND start_time::date = CURRENT_DATE
-            AND end_time >= $2
-            ORDER BY start_time ASC
-            LIMIT 3
-            `;
+      const upcomingQuery = `SELECT id, title, start_time, end_time, join_url, 'Meeting' as type FROM meetings WHERE $1 = ANY(user_id) AND start_time::date = CURRENT_DATE AND end_time >= $2 ORDER BY start_time ASC LIMIT 3`;
       const upcomingRes = await pool.query(upcomingQuery, [userId, now]);
       let todaysSchedule = upcomingRes.rows;
 
       // 2. If we have space, get Ended Meetings
       if (todaysSchedule.length < 3) {
         const limit = 3 - todaysSchedule.length;
-        const endedQuery = `
-                SELECT id, title, start_time, end_time, join_url, 'Meeting' as type
-                FROM meetings
-                WHERE $1 = ANY(user_id)
-                AND start_time::date = CURRENT_DATE
-                AND end_time < $2
-                ORDER BY start_time ASC
-                LIMIT $3
-            `;
+        const endedQuery = `SELECT id, title, start_time, end_time, join_url, 'Meeting' as type FROM meetings WHERE $1 = ANY(user_id) AND start_time::date = CURRENT_DATE AND end_time < $2 ORDER BY start_time ASC LIMIT $3`;
         const endedRes = await pool.query(endedQuery, [userId, now, limit]);
         todaysSchedule = [...todaysSchedule, ...endedRes.rows];
       }
 
-      const recentTasksQuery = `
-            SELECT title as description, 'New Assignment' as title, created_at, 'task' as type
-            FROM tasks
-            WHERE assigned_to = $1
-            ORDER BY created_at DESC
-            LIMIT 5
-            `;
+      const recentTasksQuery = `SELECT title as description, 'New Assignment' as title, created_at, 'task' as type FROM tasks WHERE assigned_to = $1 ORDER BY created_at DESC LIMIT 5`;
 
-      const recentMeetingsQuery = `
-            SELECT title as description, 'Meeting Invite' as title, created_at, 'meeting' as type
-            FROM meetings
-            WHERE $1 = ANY(user_id)
-            ORDER BY created_at DESC
-            LIMIT 5
-            `;
+      const recentMeetingsQuery = `SELECT title as description, 'Meeting Invite' as title, created_at, 'meeting' as type FROM meetings WHERE $1 = ANY(user_id) ORDER BY created_at DESC LIMIT 5`;
 
       const [recentTasks, recentMeetings] = await Promise.all([
         pool.query(recentTasksQuery, [userId]),
@@ -107,11 +78,7 @@ router.get(
 
       // --- NEW: Get Today's Status ---
       const currentDate = now.toISOString().split("T")[0];
-      const statusQuery = `
-            SELECT check_in_time, check_out_time
-            FROM attendance
-            WHERE user_id = $1 AND date = $2
-        `;
+      const statusQuery = `SELECT check_in_time, check_out_time FROM attendance WHERE user_id = $1 AND date = $2`;
       const statusRes = await pool.query(statusQuery, [userId, currentDate]);
 
       let attendanceStatus = "not_clocked_in";
@@ -136,7 +103,7 @@ router.get(
           completedTasks: parseInt(taskStats.completed),
           pendingTasks: parseInt(taskStats.pending),
           attendancePercentage:
-            attendancePercentage > 100 ? 100 : attendancePercentage, // Cap at 100 just in case
+            attendancePercentage > 100 ? 100 : attendancePercentage,
           daysPresent,
           attendanceStatus,
           checkInTime,
@@ -165,35 +132,24 @@ router.post(
       const currentDate = now.toISOString().split("T")[0];
       const currentTime = now.toISOString().split("T")[1].split(".")[0];
 
-      const role = data.role; // Assuming role is in token, if not verify with DB
+      const role = data.role;
 
-      // --- IP Restriction Logic ---
-      // --- IP Restriction Logic ---
       if (role !== 'admin' && role !== 'super_admin') {
 
-        // 1. Get raw IP (Type: string | string[] | undefined)
         let rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
-
-        // 2. FIX TS ERROR: Ensure it is a string.
-        // If it is an array, take the first element.
         let clientIp: string = Array.isArray(rawIp) ? rawIp[0] : rawIp;
 
-        // 3. Handle Proxy chaining (comma separated IPs)
         if (clientIp && clientIp.includes(',')) {
           clientIp = clientIp.split(',')[0].trim();
         }
 
-        // 4. Normalize IPv6 mapped to IPv4
         if (clientIp && clientIp.startsWith('::ffff:')) {
           clientIp = clientIp.replace('::ffff:', '');
         }
-
-        // 5. Normalize Localhost
         if (clientIp === '::1') clientIp = '127.0.0.1';
 
         console.log(`[Clock-In Debug] User: ${data.id} | IP: ${clientIp}`);
 
-        // 6. Check if IP is allowed
         const ipCheck = await pool.query('SELECT 1 FROM allowed_ips WHERE ip_address = $1', [clientIp]);
 
         if (ipCheck.rows.length === 0) {
@@ -204,17 +160,7 @@ router.post(
       }
 
       const status = "Present";
-      // UPSERT: Insert if new, Update if exists (e.g. Absent/On Leave) BUT only if NOT already clocked in (check_in_time is NULL)
-      const query = `
-            INSERT INTO attendance(user_id, date, status, check_in_time)
-            VALUES($1, $2, $3, $4)
-            ON CONFLICT (user_id, date)
-            DO UPDATE SET
-                status = 'Present',
-                check_in_time = EXCLUDED.check_in_time
-            WHERE attendance.check_in_time IS NULL
-            RETURNING id, check_in_time, check_out_time;
-        `;
+      const query = `INSERT INTO attendance(user_id, date, status, check_in_time) VALUES($1, $2, $3, $4) ON CONFLICT (user_id, date) DO UPDATE SET status = 'Present', check_in_time = EXCLUDED.check_in_time WHERE attendance.check_in_time IS NULL RETURNING id, check_in_time, check_out_time;`;
 
       const result = await pool.query(query, [
         userId,
@@ -235,7 +181,6 @@ router.post(
         checkOut: result.rows[0].check_out_time,
       });
     } catch (error: any) {
-      // 23505 shouldn't happen with ON CONFLICT, but keeping generic error handling
       console.error("Error clocking in:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -251,8 +196,8 @@ router.post(
       const token = req.cookies?.token;
       const data: any = await decodeToken(token);
       const now = new Date();
-      const currentTime = now.toISOString().split("T")[1].split(".")[0]; // HH:MM:SS (UTC)
-      const currentDate = now.toISOString().split("T")[0]; // YYYY-MM-DD (UTC)
+      const currentTime = now.toISOString().split("T")[1].split(".")[0];
+      const currentDate = now.toISOString().split("T")[0];
       const userId = data.id;
 
       const checkInRes = await pool.query(
@@ -273,12 +218,7 @@ router.post(
       const workingHours =
         (now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60);
       const status = workingHours < 7 ? "Half Day" : "Present";
-      const query = `
-            UPDATE attendance
-            SET status = $3, check_out_time = $4
-            WHERE user_id = $1 AND date = $2
-            RETURNING id, check_out_time,check_in_time;
-        `;
+      const query = `UPDATE attendance SET status = $3, check_out_time = $4 WHERE user_id = $1 AND date = $2 RETURNING id, check_out_time,check_in_time;`;
 
       const result = await pool.query(query, [
         userId,
@@ -315,12 +255,7 @@ router.get(
       const data: any = await decodeToken(token);
       const userId = data.id;
 
-      const meetingsQuery = `
-            SELECT id, title, start_time, end_time, join_url, description, user_id
-            FROM meetings
-            WHERE $1 = ANY(user_id)
-            ORDER BY start_time DESC
-        `;
+      const meetingsQuery = `SELECT id, title, start_time, end_time, join_url, description, user_id FROM meetings WHERE $1 = ANY(user_id) ORDER BY start_time DESC`;
       const result = await pool.query(meetingsQuery, [userId]);
 
       res.json({ meetings: result.rows });

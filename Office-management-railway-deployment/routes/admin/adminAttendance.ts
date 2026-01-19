@@ -118,26 +118,10 @@ router.get(
         }
 
         // Fetch all active employees and their attendance for the specific date
-        const query = `
-                SELECT
-                    u.id as user_id,
-                    u.name,
-                    u.avatar_url,
-                    u.designation,
-                    COALESCE(a.status, 'Absent') as status,
-                    a.check_in_time,
-                    a.check_out_time,
-                    a.id as attendance_id
-                FROM users u
-                LEFT JOIN attendance a ON u.id = a.user_id AND a.date = $1
-                WHERE u.role != 'admin' AND u.role != 'super_admin'
-                ORDER BY u.name ASC
-            `;
+        const query = `SELECT u.id as user_id, u.name, u.avatar_url, u.designation, COALESCE(a.status, 'Absent') as status, a.check_in_time, a.check_out_time, a.id as attendance_id FROM users u LEFT JOIN attendance a ON u.id = a.user_id AND a.date = $1 WHERE u.role != 'admin' AND u.role != 'super_admin' ORDER BY u.name ASC`;
 
         const result = await pool.query(query, [date]);
 
-        // Format data for frontend
-        // We pass 'date' as string (from query) to formatTime to enable UTC conversion
         const formattedData = result.rows.map((row) => ({
           id: row.user_id,
           attendanceId: row.attendance_id,
