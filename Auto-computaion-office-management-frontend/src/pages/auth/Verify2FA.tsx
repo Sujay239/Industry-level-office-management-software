@@ -16,13 +16,8 @@ const Verify2FA: React.FC = () => {
     const location = useLocation();
     const { showSuccess, showError } = useNotification();
 
-    // Check for token presence
-    React.useEffect(() => {
-        if (!location.state?.token) {
-            showError("Access denied. Please login first.");
-            navigate('/login', { replace: true });
-        }
-    }, [location.state, navigate, showError]);
+    // Check for token presence - Removed to prevent infinite loop as token is HttpOnly
+    // and not passed in state. The backend validates the session cookie instead.
 
     const handleVerify = async () => {
         if (otp.length !== 6) {

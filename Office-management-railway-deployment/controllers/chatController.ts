@@ -5,8 +5,8 @@ import decodeToken from "../utils/decodeToken.js";
 
 export const getChats = async (req: Request, res: Response) => {
   const token = req.cookies.token;
-  const data:any = await decodeToken(token);
-  const userId = data.userId;
+  const data: any = await decodeToken(token);
+  const userId = data.id;
 
   try {
 
@@ -131,7 +131,7 @@ export const getMessages = async (req: Request, res: Response) => {
   const chatId = req.params.chatId;
   const token = req.cookies.token;
   const data: any = await decodeToken(token);
-  const userId = data.userId;
+  const userId = data.id;
   const cursor = req.query.cursor ? parseInt(req.query.cursor as string) : null;
   const limitCount = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
@@ -223,8 +223,12 @@ export const getMessages = async (req: Request, res: Response) => {
 export const getOrCreateDirectChat = async (req: Request, res: Response) => {
   const token = req.cookies.token;
   const data: any = await decodeToken(token);
-  const userId = data.userId;
+  const userId = data.id;
   const { targetUserId } = req.body;
+
+  if (!targetUserId) {
+    return res.status(400).json({ message: "Target user ID is required" });
+  }
 
   try {
     // Check if DM exists
@@ -499,7 +503,9 @@ export const handleSocketConnection = (io: Server) => {
 };
 
 export const markMessagesRead = async (req: Request, res: Response) => {
-  const userId = (req as any).user.id;
+  const token = req.cookies?.token;
+  const data: any = await decodeToken(token);
+  const userId = data.id;
   const { chatId } = req.body;
 
   if (!chatId) return res.status(400).json({ message: "Chat ID required" });
