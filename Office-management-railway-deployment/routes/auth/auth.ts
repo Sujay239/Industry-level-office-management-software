@@ -6,12 +6,15 @@ import decodeToken from '../../utils/decodeToken.js';
 import { authenticateToken } from '../../middlewares/authenticateToken.js';
 import isAdmin from '../../middlewares/isAdmin.js';
 import crypto from 'crypto';
+import validateResource from '../../middlewares/validateResource.js';
+import { loginSchema, authorizedTwoFASchema, verifyPasswordSchema } from '../../validators/authValidator.js';
+
 const router = express.Router();
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', validateResource(loginSchema), async (req: Request, res: Response) => {
     let { email, password, forceLogout } = req.body;
 
-    if(email) {
+    if (email) {
         email = email.toLowerCase();
     }
 
@@ -81,7 +84,7 @@ router.get('/2fa', authenticateToken, isAdmin, async (req: Request, res: Respons
     }
 })
 
-router.post('/authorized-2fa', authenticateToken, isAdmin, async (req: Request, res: Response) => {
+router.post('/authorized-2fa', authenticateToken, isAdmin, validateResource(authorizedTwoFASchema), async (req: Request, res: Response) => {
 
     const { code } = req.body;
 
@@ -138,14 +141,14 @@ router.post('/authorized-2fa', authenticateToken, isAdmin, async (req: Request, 
 
 
 
-router.post('/logout',authenticateToken, async (req: Request, res: Response) => {
+router.post('/logout', authenticateToken, async (req: Request, res: Response) => {
     try {
         const token = req.cookies?.token;
 
-            const decoded: any = await decodeToken(token);
-            if (decoded && decoded.id) {
-                await pool.query('UPDATE users SET current_session_id = NULL WHERE id = $1', [decoded.id]);
-            }
+        const decoded: any = await decodeToken(token);
+        if (decoded && decoded.id) {
+            await pool.query('UPDATE users SET current_session_id = NULL WHERE id = $1', [decoded.id]);
+        }
 
 
         res.clearCookie('token', {
@@ -164,7 +167,7 @@ router.post('/logout',authenticateToken, async (req: Request, res: Response) => 
 
 
 
-router.get('/me',authenticateToken, async (req: Request, res: Response) => {
+router.get('/me', authenticateToken, async (req: Request, res: Response) => {
     const token = req.cookies.token;
     try {
         const decoded = await decodeToken(token);
@@ -214,7 +217,7 @@ router.get('/myData', authenticateToken, async (req: Request, res: Response) => 
 
 
 
-router.post('/verify-password', authenticateToken, async (req: Request, res: Response) => {
+router.post('/verify-password', authenticateToken, validateResource(verifyPasswordSchema), async (req: Request, res: Response) => {
     const { password } = req.body;
 
     try {

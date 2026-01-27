@@ -7,7 +7,9 @@ import { enforce2FA } from '../../middlewares/enforce2FA.js';
 const router = express.Router();
 
 // Get all departments with manager details and staff count
-import isAdmin from '../../middlewares/isAdmin.js'; // Import isAdmin
+import isAdmin from '../../middlewares/isAdmin.js';
+import validateResource from '../../middlewares/validateResource.js';
+import { departmentSchema } from '../../validators/adminFeaturesValidator.js';
 
 router.get('/getAll', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
     try {
@@ -76,7 +78,7 @@ router.get('/get/:id', authenticateToken, isAdmin, enforce2FA, async (req: Reque
 });
 
 // Add new department
-router.post('/add', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/add', authenticateToken, isSuperAdmin, enforce2FA, validateResource(departmentSchema), async (req: Request, res: Response) => {
     const { name, description, manager_id } = req.body;
     try {
         // Check if name exists
@@ -99,7 +101,7 @@ router.post('/add', authenticateToken, isSuperAdmin, enforce2FA, async (req: Req
 });
 
 // Update department
-router.put('/update/:id', authenticateToken, isSuperAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.put('/update/:id', authenticateToken, isSuperAdmin, enforce2FA, validateResource(departmentSchema), async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description, manager_id } = req.body;
     try {

@@ -3,6 +3,8 @@ import pool from '../../db/db.js';
 import { authenticateToken } from '../../middlewares/authenticateToken.js';
 import isAdmin from '../../middlewares/isAdmin.js';
 import { enforce2FA } from '../../middlewares/enforce2FA.js';
+import validateResource from '../../middlewares/validateResource.js';
+import { holidaySchema } from '../../validators/adminFeaturesValidator.js';
 
 const router = express.Router();
 
@@ -18,7 +20,7 @@ router.get('/all', authenticateToken, enforce2FA, async (req: Request, res: Resp
 });
 
 // Add a new holiday
-router.post('/add', authenticateToken, isAdmin, async (req: Request, res: Response) => {
+router.post('/add', authenticateToken, isAdmin, validateResource(holidaySchema), async (req: Request, res: Response) => {
     const { name, date, type } = req.body;
 
     if (!name || !date || !type) {
@@ -42,7 +44,7 @@ router.post('/add', authenticateToken, isAdmin, async (req: Request, res: Respon
 });
 
 // Update a holiday
-router.put('/update/:id', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.put('/update/:id', authenticateToken, isAdmin, enforce2FA, validateResource(holidaySchema), async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, date, type } = req.body;
 

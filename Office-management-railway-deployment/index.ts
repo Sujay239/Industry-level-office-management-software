@@ -12,7 +12,7 @@ import { dirname } from 'path';
 import db from './db/db.js';
 import authRoutes from './routes/auth/auth.js';
 import adminEmp from './routes/admin/adminEmp.js';
-import manageAdmins from './routes/admin/manageAdmins.js';
+import manageAdmins from './routes/superadmin/manageAdmins.js';
 import manageIPs from './routes/admin/manageIPs.js';
 import adminPayroll from './routes/admin/adminPayroll.js';
 import AdminLeaves from './routes/admin/AdminLeavesManagement.js';

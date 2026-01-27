@@ -5,6 +5,8 @@ import isAdmin from "../../middlewares/isAdmin.js";
 import { enforce2FA } from "../../middlewares/enforce2FA.js";
 import { sendEmail } from "../../utils/mailer.js";
 import { meetingInvitationEmail } from "../../templates/meetingInvitationEmail.js";
+import validateResource from "../../middlewares/validateResource.js";
+import { meetingSchema } from "../../validators/adminFeaturesValidator.js";
 
 const router = express.Router();
 
@@ -14,6 +16,7 @@ router.post(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(meetingSchema),
   async (req: Request, res: Response) => {
     const { title, description, start_time, end_time, join_url, user_ids } =
       req.body;
@@ -163,6 +166,7 @@ router.put(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(meetingSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { title, description, start_time, end_time, join_url, user_ids } =

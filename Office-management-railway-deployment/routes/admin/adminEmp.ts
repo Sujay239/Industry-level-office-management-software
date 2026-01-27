@@ -12,6 +12,10 @@ import { welcomeEmployeeEmail } from "../../templates/welcomeEmployeeEmail.js";
 // import { generatePdf } from "../../utils/pdfGenerator.js";
 import { logAudit } from "../../utils/auditLogger.js";
 
+
+import validateResource from "../../middlewares/validateResource.js";
+import { addEmployeeSchema, updateEmployeeSchema, removeEmployeeSchema } from "../../validators/employeeValidator.js";
+
 const router = express.Router();
 
 router.post(
@@ -19,6 +23,7 @@ router.post(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(addEmployeeSchema),
   async (req: Request, res: Response) => {
     let {
       name,
@@ -196,6 +201,7 @@ router.put(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(updateEmployeeSchema),
   async (req: Request, res: Response) => {
     const client = await pool.connect();
 
@@ -386,6 +392,7 @@ router.post(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(removeEmployeeSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { reason, password } = req.body;

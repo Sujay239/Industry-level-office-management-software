@@ -5,6 +5,8 @@ import isAdmin from "../../middlewares/isAdmin.js";
 import { enforce2FA } from "../../middlewares/enforce2FA.js";
 import { sendEmail } from "../../utils/mailer.js";
 import { announcementEmail } from "../../templates/announcementEmail.js";
+import validateResource from "../../middlewares/validateResource.js";
+import { announcementSchema } from "../../validators/adminFeaturesValidator.js";
 
 const router = express.Router();
 
@@ -16,6 +18,7 @@ router.post(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(announcementSchema),
   async (req: Request, res: Response) => {
     try {
       const { subject, message, priority } = req.body;

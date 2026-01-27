@@ -7,6 +7,8 @@ import { sendEmail } from "../../utils/mailer.js";
 import { payrollSlipEmail } from "../../templates/payrollSlipEmail.js";
 
 const router = express.Router();
+import validateResource from "../../middlewares/validateResource.js";
+import { payPayrollSchema } from "../../validators/payrollValidator.js";
 
 router.get(
   "/all",
@@ -112,6 +114,7 @@ router.put(
   authenticateToken,
   isAdmin,
   enforce2FA,
+  validateResource(payPayrollSchema),
   async (req: Request, res: Response) => {
     const client = await pool.connect();
 

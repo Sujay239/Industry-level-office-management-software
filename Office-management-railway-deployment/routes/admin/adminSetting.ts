@@ -6,6 +6,8 @@ import { enforce2FA } from '../../middlewares/enforce2FA.js';
 import multer from 'multer';
 import bcrypt from 'bcrypt';
 import decodeToken from '../../utils/decodeToken.js';
+import validateResource from '../../middlewares/validateResource.js';
+import { updateAdminSchema, changePasswordSchema, toggleTwoFASchema } from '../../validators/adminValidator.js';
 
 const router = express.Router();
 
@@ -13,7 +15,7 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
-router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.single('avatar'), async (req: Request, res: Response) => {
+router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.single('avatar'), validateResource(updateAdminSchema), async (req: Request, res: Response) => {
     try {
         // Extract text fields
         const { name, designation, phone, location, password } = req.body;
@@ -60,7 +62,7 @@ router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.singl
         `;
 
         const values = [
-            name || currentUser.name,            
+            name || currentUser.name,
             designation || currentUser.designation,
             phone || currentUser.phone,
             location || currentUser.location,
@@ -82,7 +84,7 @@ router.post('/updateAdmin', authenticateToken, isAdmin, enforce2FA, upload.singl
 });
 
 // --- 3. Change Password Route ---
-router.post('/changePassword', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/changePassword', authenticateToken, isAdmin, enforce2FA, validateResource(changePasswordSchema), async (req: Request, res: Response) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const token = req.cookies?.token;
@@ -128,7 +130,7 @@ router.post('/changePassword', authenticateToken, isAdmin, enforce2FA, async (re
 });
 
 
-router.post('/enable-2fa', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/enable-2fa', authenticateToken, isAdmin, enforce2FA, validateResource(toggleTwoFASchema), async (req: Request, res: Response) => {
     try {
         const { pin } = req.body;
         const token = req.cookies?.token;
@@ -163,7 +165,7 @@ router.post('/enable-2fa', authenticateToken, isAdmin, enforce2FA, async (req: R
     }
 });
 
-router.post('/disable-2fa', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/disable-2fa', authenticateToken, isAdmin, enforce2FA, validateResource(toggleTwoFASchema), async (req: Request, res: Response) => {
     try {
         const { pin } = req.body;
         const token = req.cookies?.token;

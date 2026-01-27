@@ -3,6 +3,8 @@ import pool from '../../db/db.js';
 import { authenticateToken } from '../../middlewares/authenticateToken.js';
 import isAdmin from '../../middlewares/isAdmin.js';
 import { enforce2FA } from '../../middlewares/enforce2FA.js';
+import validateResource from '../../middlewares/validateResource.js';
+import { ipSchema } from '../../validators/adminFeaturesValidator.js';
 
 const router = express.Router();
 
@@ -18,7 +20,7 @@ router.get('/', authenticateToken, isAdmin, enforce2FA, async (req: Request, res
 });
 
 // Add a new allowed IP
-router.post('/add', authenticateToken, isAdmin, enforce2FA, async (req: Request, res: Response) => {
+router.post('/add', authenticateToken, isAdmin, enforce2FA, validateResource(ipSchema), async (req: Request, res: Response) => {
     try {
         const { ip_address, label } = req.body;
 
